@@ -11,8 +11,8 @@
 .\build.ps1
 ```
 
-- **Chromium / Chrome / Edge:** откройте `chrome://extensions` (в Edge — `edge://extensions`), включите режим разработчика, нажмите «Загрузить распакованное» и выберите `D:\BetterGitHub\dist\chromium`.
-- **Firefox:** откройте `about:debugging#/runtime/this-firefox`, нажмите «Загрузить временное дополнение» и выберите `D:\BetterGitHub\dist\firefox\manifest.json`. Временное дополнение исчезнет после перезапуска Firefox.
+- **Chromium / Chrome / Edge:** откройте `chrome://extensions` (в Edge — `edge://extensions`), включите режим разработчика, нажмите «Загрузить распакованное» и выберите папку `dist/chromium` внутри клонированного проекта.
+- **Firefox:** откройте `about:debugging#/runtime/this-firefox`, нажмите «Загрузить временное дополнение» и выберите файл `dist/firefox/manifest.json` внутри клонированного проекта. Временное дополнение исчезнет после перезапуска Firefox.
 
 После повторной сборки перезагрузите расширение на странице расширений браузера и обновите вкладку GitHub, иначе браузер продолжит использовать старые файлы.
 
