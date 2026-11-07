@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BetterGitHub — темы и настройки</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main class="settings-shell">
+    <header class="page-heading">
+      <p class="eyebrow" data-i18n="eyebrow">Оформление GitHub</p>
+      <h1>BetterGitHub</h1>
+      <label class="language-picker"><span data-i18n="languageLabel">Язык</span><select name="language" form="settings" aria-label="Язык" data-i18n-aria="languageLabel"><option value="ru">Русский</option><option value="en">English</option></select></label>
+    </header>
+
+    <form id="settings">
+      <section class="theme-section" aria-labelledby="theme-heading">
+        <div class="section-heading">
+          <div><h2 id="theme-heading" data-i18n="themeHeading">Выбери тему</h2><p data-i18n="themeDescription">Выбери карточку и сохрани настройки, чтобы применить тему ко всему GitHub.</p></div>
+          <div class="gallery-controls" aria-label="Прокрутка тем" data-i18n-aria="galleryControls">
+            <button type="button" id="themes-prev" aria-label="Предыдущие темы" data-i18n-aria="previousThemes">←</button>
+            <button type="button" id="themes-next" aria-label="Следующие темы" data-i18n-aria="nextThemes">→</button>
+          </div>
+        </div>
+
+        <div class="theme-gallery" id="theme-gallery" role="radiogroup" aria-label="Темы GitHub" data-i18n-aria="githubThemes">
+          <label class="theme-card theme-card--universe"><input type="radio" name="theme" value="universe"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">UNI<span>V</span>ERSE</span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>GitHub Universe</strong><small>Светлая</small></span></label>
+          <label class="theme-card theme-card--universe-dark"><input type="radio" name="theme" value="universe-dark"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">UNI<span>V</span>ERSE</span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>GitHub Universe</strong><small>Тёмная</small></span></label>
+          <label class="theme-card theme-card--github"><input type="radio" name="theme" value="github"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">Git<span>Hub</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>GitHub</strong><small>Оригинальная</small></span></label>
+          <label class="theme-card theme-card--midnight"><input type="radio" name="theme" value="midnight"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">MID<span>NIGHT</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Полночь</strong><small>Тёмно-синяя</small></span></label>
+          <label class="theme-card theme-card--amethyst"><input type="radio" name="theme" value="amethyst"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">AME<span>THYST</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Аметист</strong><small>Фиолетовая</small></span></label>
+          <label class="theme-card theme-card--forest"><input type="radio" name="theme" value="forest"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">FOR<span>EST</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Лес</strong><small>Зелёная</small></span></label>
+          <label class="theme-card theme-card--light"><input type="radio" name="theme" value="light"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">LIGHT<span>MODE</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Светлая</strong><small>Синий акцент</small></span></label>
+        </div>
+        <div class="theme-actions">
+          <button class="save-button" type="submit" data-i18n="save">Сохранить настройки</button>
+          <p class="theme-status" id="status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <details class="advanced">
+        <summary><span data-i18n="advanced">Дополнительные настройки</span> <span aria-hidden="true">↗</span></summary>
+        <div class="advanced__body">
+          <p><span data-i18n="advancedDescription">Можно использовать оформление из</span> <code>.bettergithub.json</code> <span data-i18n="advancedDescriptionEnd">на отдельных страницах или настроить личную тему для всего GitHub.</span></p>
+          <div class="fields">
+            <label><span data-i18n="modeLabel">Источник оформления</span><select name="mode"><option value="global" data-i18n="modeGlobal">Моя тема для всего GitHub</option><option value="site" data-i18n="modeSite">Оформление страницы, если есть</option></select></label>
+            <fieldset class="palette-fields fields__wide" id="palette-fields">
+              <legend data-i18n="paletteLegend">Цвета моей темы</legend>
+              <p id="palette-hint">Выбери карточку выше и измени её цвета под себя. Выбор другой карточки вернёт цвета её палитры.</p>
+              <div class="palette-fields__grid">
+                <label><span data-i18n="accent">Акцент</span><input name="accent" type="color" value="#0969da"></label>
+                <label><span data-i18n="base">Фон страницы</span><input name="base" type="color" value="#0d1117"></label>
+                <label><span data-i18n="surface">Поверхности</span><input name="surface" type="color" value="#161b22"></label>
+                <label><span data-i18n="text">Текст</span><input name="text" type="color" value="#f0f6fc"></label>
+                <label><span data-i18n="muted">Вторичный текст</span><input name="muted" type="color" value="#8b949e"></label>
+                <label><span data-i18n="border">Границы</span><input name="border" type="color" value="#30363d"></label>
+              </div>
+            </fieldset>
+            <label class="fields__wide"><span data-i18n="background">Фоновое изображение</span><input name="background" type="url" placeholder="https://raw.githubusercontent.com/…"></label>
+            <label><span data-i18n="effect">Эффект фонового изображения</span><select name="effect"><option value="none" data-i18n="effectNone">Нет</option><option value="gradient" data-i18n="effectGradient">Мягкий градиент</option><option value="glow" data-i18n="effectGlow">Свечение</option></select></label>
+          </div>
+        </div>
+      </details>
+    </form>
+    <footer data-i18n="footer">Изображения загружаются только с GitHub. CSS и JavaScript из файлов оформления не выполняются.</footer>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

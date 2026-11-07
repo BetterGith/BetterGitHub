@@ -1,0 +1,9 @@
+dist/
+node_modules/
+.chrome-test*/
+.chrome-smoke/
+.venv-firefox-smoke/
+avatar-before*.png
+avatar-after*.png
+universe-reference.png
+options-preview.png

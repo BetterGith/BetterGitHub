@@ -1,0 +1,14 @@
+{
+  "appearance": {
+    "theme": "amethyst",
+    "accent": "#c68cff",
+    "background": "assets/background.png",
+    "effect": "gradient"
+  },
+  "banner": "assets/banner.png",
+  "icon": "assets/icon.png",
+  "installUrl": "https://github.com/OWNER/REPOSITORY/releases/download/v1.0.0/installer.zip",
+  "layout": {
+    "sidebar": ["about", "releases", "languages", "packages", "contributors"]
+  }
+}
