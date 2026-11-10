@@ -90,6 +90,21 @@ test('six-dot handles appear only after BetterGitHub layout editing starts and k
   dom.window.close();
 });
 
+test('profile blocks move down with ArrowDown and a downward drop', async () => {
+  const dom = await profile();
+  const { window } = dom;
+  const doc = window.document;
+  doc.getElementById('bgh-gear').click();
+  const main = doc.querySelector('#user-profile-frame > .position-relative');
+  const readme = doc.querySelector('[data-bgh-drag-handle="readme"]');
+  readme.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  assert.deepEqual(siblingIds(main, 'profile-'), ['profile-pinned', 'profile-readme', 'profile-contributions']);
+  readme.dispatchEvent(new window.Event('dragstart', { bubbles: true }));
+  doc.getElementById('profile-contributions').dispatchEvent(new window.Event('drop', { bubbles: true, cancelable: true }));
+  assert.deepEqual(siblingIds(main, 'profile-'), ['profile-pinned', 'profile-contributions', 'profile-readme']);
+  dom.window.close();
+});
+
 test('profile editor saves both orders locally and exports the same JSON arrays', async () => {
   const dom = await profile();
   const { window } = dom;

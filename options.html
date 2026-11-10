@@ -3,68 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BetterGitHub — темы и настройки</title>
+  <title>BetterGitHub — магазин</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <main class="settings-shell">
-    <header class="page-heading">
-      <p class="eyebrow" data-i18n="eyebrow">Оформление GitHub</p>
+    <header class="app-header">
+      <img class="brand-mark" src="icons/icon-48.png" width="36" height="36" alt="">
       <h1>BetterGitHub</h1>
-      <label class="language-picker"><span data-i18n="languageLabel">Язык</span><select name="language" form="settings" aria-label="Язык" data-i18n-aria="languageLabel"><option value="ru">Русский</option><option value="en">English</option></select></label>
+      <details class="header-menu" id="header-menu">
+        <summary aria-label="Другие действия" data-i18n-aria="moreActions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></summary>
+        <div class="header-menu__items">
+          <button type="button" data-panel="advanced" aria-controls="advanced-panel" aria-pressed="false" data-i18n="advanced">Дополнительно</button>
+          <button type="button" id="open-account" data-i18n="signIn">Войти через GitHub</button>
+        </div>
+      </details>
     </header>
-
-    <form id="settings">
-      <section class="theme-section" aria-labelledby="theme-heading">
-        <div class="section-heading">
-          <div><h2 id="theme-heading" data-i18n="themeHeading">Выбери тему</h2><p data-i18n="themeDescription">Выбери карточку и сохрани настройки, чтобы применить тему ко всему GitHub.</p></div>
-          <div class="gallery-controls" aria-label="Прокрутка тем" data-i18n-aria="galleryControls">
-            <button type="button" id="themes-prev" aria-label="Предыдущие темы" data-i18n-aria="previousThemes">←</button>
-            <button type="button" id="themes-next" aria-label="Следующие темы" data-i18n-aria="nextThemes">→</button>
-          </div>
-        </div>
-
-        <div class="theme-gallery" id="theme-gallery" role="radiogroup" aria-label="Темы GitHub" data-i18n-aria="githubThemes">
-          <label class="theme-card theme-card--universe"><input type="radio" name="theme" value="universe"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">UNI<span>V</span>ERSE</span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>GitHub Universe</strong><small>Светлая</small></span></label>
-          <label class="theme-card theme-card--universe-dark"><input type="radio" name="theme" value="universe-dark"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">UNI<span>V</span>ERSE</span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>GitHub Universe</strong><small>Тёмная</small></span></label>
-          <label class="theme-card theme-card--github"><input type="radio" name="theme" value="github"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">Git<span>Hub</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>GitHub</strong><small>Оригинальная</small></span></label>
-          <label class="theme-card theme-card--midnight"><input type="radio" name="theme" value="midnight"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">MID<span>NIGHT</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Полночь</strong><small>Тёмно-синяя</small></span></label>
-          <label class="theme-card theme-card--amethyst"><input type="radio" name="theme" value="amethyst"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">AME<span>THYST</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Аметист</strong><small>Фиолетовая</small></span></label>
-          <label class="theme-card theme-card--forest"><input type="radio" name="theme" value="forest"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">FOR<span>EST</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Лес</strong><small>Зелёная</small></span></label>
-          <label class="theme-card theme-card--light"><input type="radio" name="theme" value="light"><span class="theme-art" aria-hidden="true"><span class="theme-art__nav"><b>◉</b><i>CODE</i><i>ISSUES</i><i>PROJECTS</i></span><span class="theme-art__big">LIGHT<span>MODE</span></span><span class="theme-art__grid"></span></span><span class="theme-card__caption"><strong>Светлая</strong><small>Синий акцент</small></span></label>
-        </div>
-        <div class="theme-actions">
-          <button class="save-button" type="submit" data-i18n="save">Сохранить настройки</button>
-          <p class="theme-status" id="status" role="status" aria-live="polite"></p>
-        </div>
-      </section>
-
-      <details class="advanced">
-        <summary><span data-i18n="advanced">Дополнительные настройки</span> <span aria-hidden="true">↗</span></summary>
-        <div class="advanced__body">
-          <p><span data-i18n="advancedDescription">Можно использовать оформление из</span> <code>.bettergithub.json</code> <span data-i18n="advancedDescriptionEnd">на отдельных страницах или настроить личную тему для всего GitHub.</span></p>
-          <div class="fields">
-            <label><span data-i18n="modeLabel">Источник оформления</span><select name="mode"><option value="global" data-i18n="modeGlobal">Моя тема для всего GitHub</option><option value="site" data-i18n="modeSite">Оформление страницы, если есть</option></select></label>
-            <fieldset class="palette-fields fields__wide" id="palette-fields">
-              <legend data-i18n="paletteLegend">Цвета моей темы</legend>
-              <p id="palette-hint">Выбери карточку выше и измени её цвета под себя. Выбор другой карточки вернёт цвета её палитры.</p>
-              <div class="palette-fields__grid">
+    <form id="settings" class="settings-layout">
+      <nav class="side-rail" aria-label="Разделы магазина" data-i18n-aria="settingsSections">
+        <button type="button" class="rail-button is-active" data-panel="themes" aria-controls="themes-panel" aria-pressed="true" aria-label="Темы" data-i18n-aria="themeNav" title="Темы"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a1.8 1.8 0 0 0 1.3-3.1 1 1 0 0 1 .7-1.7h1.3A4.5 4.5 0 0 0 21 11.7 8.8 8.8 0 0 0 12 3Z"/><path d="M7.5 11h.01M10 7.5h.01M14 7.5h.01M17 10.5h.01"/></svg><span data-i18n="themeNav">Темы</span></button>
+        <button type="button" class="rail-button" data-panel="plugins" aria-controls="plugins-panel" aria-pressed="false" aria-label="Плагины" data-i18n-aria="pluginsNav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5m8-5v5M5 8h14v3a7 7 0 0 1-7 7v3m0-3a7 7 0 0 1-7-7Z"/></svg><span data-i18n="pluginsNav">Плагины</span></button>
+        <span class="rail-spacer"></span>
+        <a class="rail-link" href="https://github.com/BetterGith/BetterGitHub" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 19c-3 .9-3-1.5-4-2m8 3v-2.8c0-1 .2-1.5-.5-2-3.2-.4-6.5-1.6-6.5-7A5.4 5.4 0 0 1 6.5 4.5 5 5 0 0 1 6.7 1s2 0 3 1.5a11 11 0 0 1 4.6 0C15.3 1 17.3 1 17.3 1a5 5 0 0 1 .2 3.5A5.4 5.4 0 0 1 19 8.2c0 5.4-3.3 6.6-6.5 7-.7.5-.5 1-.5 2V20"/></svg></a>
+      </nav>
+      <div class="content-pane">
+        <div class="pane-scroll">
+          <section id="themes-panel" class="settings-panel" aria-labelledby="theme-heading">
+            <div class="panel-heading"><h2 id="theme-heading" data-i18n="themeHeading">Темы оформления</h2><p data-i18n="themeDescription">Выбери тему для GitHub. Изменения применятся после сохранения.</p></div>
+            <div class="catalog-toolbar">
+              <label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="theme-search" type="search" placeholder="Поиск темы" data-i18n-placeholder="themeSearch" aria-label="Поиск темы" data-i18n-aria="themeSearch"></label>
+              <select class="catalog-sort" id="theme-sort" aria-label="Сортировка тем" data-i18n-aria="themeSort"><option value="default" data-i18n="sortRecommended">Рекомендуемые</option><option value="name" data-i18n="sortName">По названию</option></select>
+            </div>
+            <div class="catalog-filters" role="group" aria-label="Фильтры тем" data-i18n-aria="themeFilters">
+              <button type="button" data-filter="all" aria-pressed="true" data-i18n="filterAll">Все</button>
+              <button type="button" data-filter="light" aria-pressed="false" data-i18n="filterLight">Светлые</button>
+              <button type="button" data-filter="dark" aria-pressed="false" data-i18n="filterDark">Тёмные</button>
+            </div>
+            <div class="featured theme-card--universe-dark" id="featured">
+              <div class="featured__copy"><span class="featured__tag" data-i18n="featured">Рекомендуем</span><h3>GitHub Universe</h3><p data-i18n="featuredDescription">Тёмная тема с ярким зелёным акцентом.</p><button type="button" id="choose-featured" data-i18n="chooseTheme">Выбрать тему</button></div>
+              <span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span>
+            </div>
+            <div class="section-label"><h3 data-i18n="themeList">Доступные темы</h3><span id="theme-count">7</span></div>
+            <div class="theme-gallery" id="theme-gallery" role="radiogroup" aria-label="Темы GitHub" data-i18n-aria="githubThemes">
+              <label class="theme-card theme-card--universe" data-tone="light"><input type="radio" name="theme" value="universe"><span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span><span class="theme-card__caption"><strong>GitHub Universe</strong><small>Светлая</small></span><span class="theme-selection" aria-hidden="true"></span></label>
+              <label class="theme-card theme-card--universe-dark" data-tone="dark"><input type="radio" name="theme" value="universe-dark"><span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span><span class="theme-card__caption"><strong>GitHub Universe</strong><small>Тёмная</small></span><span class="theme-selection" aria-hidden="true"></span></label>
+              <label class="theme-card theme-card--github" data-tone="original"><input type="radio" name="theme" value="github"><span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span><span class="theme-card__caption"><strong>GitHub</strong><small>Оригинальная</small></span><span class="theme-selection" aria-hidden="true"></span></label>
+              <label class="theme-card theme-card--midnight" data-tone="dark"><input type="radio" name="theme" value="midnight"><span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span><span class="theme-card__caption"><strong>Полночь</strong><small>Тёмно-синяя</small></span><span class="theme-selection" aria-hidden="true"></span></label>
+              <label class="theme-card theme-card--amethyst" data-tone="dark"><input type="radio" name="theme" value="amethyst"><span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span><span class="theme-card__caption"><strong>Аметист</strong><small>Фиолетовая</small></span><span class="theme-selection" aria-hidden="true"></span></label>
+              <label class="theme-card theme-card--forest" data-tone="dark"><input type="radio" name="theme" value="forest"><span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span><span class="theme-card__caption"><strong>Лес</strong><small>Зелёная</small></span><span class="theme-selection" aria-hidden="true"></span></label>
+              <label class="theme-card theme-card--light" data-tone="light"><input type="radio" name="theme" value="light"><span class="theme-swatch" aria-hidden="true"><span class="swatch-window"><i></i><i></i><i></i><i></i></span></span><span class="theme-card__caption"><strong>Светлая</strong><small>Синий акцент</small></span><span class="theme-selection" aria-hidden="true"></span></label>
+            </div>
+            <p id="theme-empty" class="empty-message" hidden data-i18n="noThemes">Ничего не найдено.</p>
+            <p class="help-text" data-i18n="themeHelp">Настроить цвета и источник оформления можно в дополнительном разделе.</p>
+          </section>
+          <section id="plugins-panel" class="settings-panel" aria-labelledby="plugins-heading" hidden>
+            <div class="panel-heading"><h2 id="plugins-heading" data-i18n="pluginsNav">Плагины</h2><p data-i18n="pluginsDescription">Дополнения для интерфейса и функций GitHub.</p></div>
+            <div class="theme-gallery" id="plugin-gallery" hidden></div>
+            <div class="plugin-empty" id="plugin-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5m8-5v5M5 8h14v3a7 7 0 0 1-7 7v3m0-3a7 7 0 0 1-7-7Z"/></svg><p data-i18n="pluginsEmpty">Плагинов пока нет.</p></div>
+          </section>
+          <section id="advanced-panel" class="settings-panel" aria-labelledby="advanced-heading" hidden>
+            <div class="panel-heading"><p class="eyebrow" data-i18n="customize">ПЕРСОНАЛИЗАЦИЯ</p><h2 id="advanced-heading" tabindex="-1" data-i18n="advanced">Дополнительно</h2><p><span data-i18n="advancedDescription">Оформление из</span> <code>.bettergithub.json</code> <span data-i18n="advancedDescriptionEnd">можно применять на отдельных страницах.</span></p></div>
+            <div class="fields">
+              <label class="field"><span data-i18n="modeLabel">Источник оформления</span><select name="mode"><option value="global" data-i18n="modeGlobal">Моя тема для всего GitHub</option><option value="site" data-i18n="modeSite">Оформление страницы, если есть</option></select></label>
+              <fieldset class="palette-fields" id="palette-fields"><legend data-i18n="paletteLegend">Цвета моей темы</legend><p id="palette-hint"></p><div class="palette-fields__grid">
                 <label><span data-i18n="accent">Акцент</span><input name="accent" type="color" value="#0969da"></label>
                 <label><span data-i18n="base">Фон страницы</span><input name="base" type="color" value="#0d1117"></label>
                 <label><span data-i18n="surface">Поверхности</span><input name="surface" type="color" value="#161b22"></label>
                 <label><span data-i18n="text">Текст</span><input name="text" type="color" value="#f0f6fc"></label>
                 <label><span data-i18n="muted">Вторичный текст</span><input name="muted" type="color" value="#8b949e"></label>
                 <label><span data-i18n="border">Границы</span><input name="border" type="color" value="#30363d"></label>
-              </div>
-            </fieldset>
-            <label class="fields__wide"><span data-i18n="background">Фоновое изображение</span><input name="background" type="url" placeholder="https://raw.githubusercontent.com/…"></label>
-            <label><span data-i18n="effect">Эффект фонового изображения</span><select name="effect"><option value="none" data-i18n="effectNone">Нет</option><option value="gradient" data-i18n="effectGradient">Мягкий градиент</option><option value="glow" data-i18n="effectGlow">Свечение</option></select></label>
-          </div>
+              </div></fieldset>
+              <label class="field"><span data-i18n="background">Фоновое изображение</span><input name="background" type="url" placeholder="https://raw.githubusercontent.com/…"></label>
+              <label class="field"><span data-i18n="effect">Эффект фонового изображения</span><select name="effect"><option value="none" data-i18n="effectNone">Нет</option><option value="gradient" data-i18n="effectGradient">Мягкий градиент</option><option value="glow" data-i18n="effectGlow">Свечение</option></select></label>
+              <label class="field"><span data-i18n="languageLabel">Язык</span><select name="language"><option value="ru">Русский</option><option value="en">English</option></select></label>
+            </div>
+            <p class="help-text" data-i18n="footer">Изображения загружаются только с GitHub. CSS и JavaScript из файлов оформления не выполняются.</p>
+          </section>
         </div>
-      </details>
+        <div class="bottom-actions"><button class="save-button" type="submit" data-i18n="save">Сохранить настройки</button><p class="theme-status" id="status" role="status" aria-live="polite"></p></div>
+      </div>
     </form>
-    <footer data-i18n="footer">Изображения загружаются только с GitHub. CSS и JavaScript из файлов оформления не выполняются.</footer>
   </main>
+  <dialog class="account-dialog" id="account-dialog" aria-labelledby="account-title">
+    <h2 id="account-title" data-i18n="signIn">Войти через GitHub</h2>
+    <p data-i18n="accountUnavailable">Вход через GitHub пока не подключён.</p>
+    <form method="dialog"><button class="save-button" data-i18n="close">Закрыть</button></form>
+  </dialog>
   <script src="options.js"></script>
 </body>
 </html>

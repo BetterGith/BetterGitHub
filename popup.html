@@ -1,1 +1,67 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>BetterGitHub</title><style>:root{font-family:Arial,sans-serif;color:#e9efff;background:#0b1020}body{min-width:270px;margin:0;padding:18px}header{display:flex;align-items:center;gap:12px;margin-bottom:16px}.mark{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#6757e7,#45aaf2);font-weight:800}h1{margin:0 0 3px;font-size:18px}p{margin:0;color:#aebbd2;font-size:13px}button{width:100%;padding:10px;border:0;border-radius:7px;background:#537ae0;color:white;font-weight:700;cursor:pointer}</style></head><body><header><div class="mark">BG</div><div><h1>BetterGitHub</h1><p id="subtitle">Оформление GitHub</p></div></header><button id="open">Открыть настройки</button><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BetterGitHub</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header class="popup-header">
+      <img src="icons/icon-48.png" width="28" height="28" alt="">
+      <h1>BetterGitHub</h1>
+      <a class="open-github" href="https://github.com/" target="_blank" rel="noopener">GitHub <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></a>
+      <a class="more" href="options.html#advanced" target="_blank" rel="noopener" data-label="advanced" aria-label="Дополнительно"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="3" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="8" cy="13" r="1.3"/></svg></a>
+    </header>
+    <section class="store-section">
+      <a class="store-card" id="open-store" href="options.html" target="_blank" rel="noopener">
+        <span class="store-art" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span><strong data-text="store">Магазин BetterGitHub</strong><small data-text="catalog">Темы и плагины</small></span>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg>
+      </a>
+    </section>
+    <section class="theme-section" aria-labelledby="theme-title">
+      <h2 id="theme-title" data-text="theme">Тема</h2>
+      <fieldset id="quick-themes" aria-labelledby="theme-title" disabled>
+        <label class="theme-choice recent-theme">
+          <input type="radio" name="quick-theme" value="light">
+          <span class="theme-preview" data-preview-theme="light" aria-hidden="true"><i></i></span>
+          <span class="choice-name">Светлая</span>
+        </label>
+        <label class="theme-choice recent-theme">
+          <input type="radio" name="quick-theme" value="midnight">
+          <span class="theme-preview" data-preview-theme="midnight" aria-hidden="true"><i></i></span>
+          <span class="choice-name">Полночь</span>
+        </label>
+        <label class="theme-choice">
+          <input type="radio" name="quick-theme" value="off">
+          <span class="theme-preview off-preview" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3v8m5-5a8 8 0 1 1-10 0"/></svg>
+          </span>
+          <span class="choice-name" data-text="off">Выключить тему</span>
+        </label>
+      </fieldset>
+    </section>
+    <section class="scope-section" aria-labelledby="scope-title">
+      <h2 id="scope-title" data-text="scope">Оформление страниц</h2>
+      <fieldset id="theme-scope" aria-labelledby="scope-title" disabled>
+        <label class="scope-choice">
+          <input type="radio" name="theme-scope" value="global">
+          <span data-text="global">Моя тема везде</span>
+        </label>
+        <label class="scope-choice">
+          <input type="radio" name="theme-scope" value="site">
+          <span data-text="site">Тема автора страницы</span>
+        </label>
+      </fieldset>
+      <p id="popup-status" role="status"></p>
+    </section>
+    <section class="plugins-section" aria-labelledby="plugins-title">
+      <h2 id="plugins-title" data-text="plugins">Плагины</h2>
+      <p data-text="noPlugins">Плагинов пока нет.</p>
+    </section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

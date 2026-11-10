@@ -31,7 +31,7 @@
   let trailEnabled = false;
   let trailBound = false;
   let lastTrailPoint = null;
-  const originalColorMode = document.documentElement.getAttribute('data-color-mode');
+  let originalColorMode = document.documentElement.getAttribute('data-color-mode');
   const api = chrome;
   let settings = DEFAULT_SETTINGS;
   let page = null;
@@ -45,6 +45,10 @@
   let profileBeforeEdit = null;
   let profileEditController = null;
   let profileDragging = null;
+  let repoDraft = null;
+  let repoMainDraft = null;
+  let repoSaveQueue = Promise.resolve();
+  let repoEditController = null;
   let previewAppearance = null;
   let previewKey = '';
   let githubDraftRunning = false;
@@ -185,11 +189,13 @@
   }
 
   function applyTheme(config) {
+    const disabled = settings.themeDisabled === true;
     const preview = previewKey === siteKey(page) ? previewAppearance : null;
-    const visual = preview || (settings.mode === 'global' ? settings.global || {} : config.appearance || {});
-    const theme = preview?.theme || (settings.mode === 'global' ? settings.theme : (visual.theme || 'github'));
-    const preset = PRESETS[theme] ?? PRESETS.midnight;
+    const visual = disabled ? {} : preview || (settings.mode === 'global' ? settings.global || {} : config.appearance || {});
+    const theme = disabled ? 'github' : preview?.theme || (settings.mode === 'global' ? settings.theme : (visual.theme || 'github'));
+    const preset = disabled ? null : PRESETS[theme] ?? PRESETS.midnight;
     const root = document.documentElement;
+    if (root.dataset.bgh !== 'themed') originalColorMode = root.getAttribute('data-color-mode');
     root.dataset.bgh = theme === 'github' ? 'github' : 'themed';
     root.dataset.bghTheme = theme;
     const githubMode = theme === 'github' ? originalColorMode : (theme === 'light' || theme === 'universe' ? 'light' : 'dark');
@@ -345,13 +351,40 @@
     const rows = new Map(DEFAULT_ORDER.map(name => [name, headingRow(name)]));
     const parent = rows.get('about')?.parentElement;
     if (!parent) return;
-    const configured = Array.isArray(config.layout?.sidebar);
-    const order = sanitizeOrder(config.layout?.sidebar);
+    const configured = !!repoDraft || Array.isArray(config.layout?.sidebar);
+    const order = repoDraft || sanitizeOrder(config.layout?.sidebar);
     parent.classList.toggle('bgh-reordered', configured);
     order.forEach((name, index) => {
       const row = rows.get(name);
       if (row?.parentElement === parent) row.style.order = configured ? String(index) : '';
     });
+  }
+
+  const repoMainOrder = value => value?.[0] === 'readme' ? ['readme', 'code'] : ['code', 'readme'];
+  function repoMainSections() {
+    const code = document.querySelector('[data-testid="directory-content"]');
+    const readme = document.querySelector('main article.markdown-body');
+    if (!code || !readme) return {};
+    let parent = code.parentElement;
+    while (parent && !parent.contains(readme)) parent = parent.parentElement;
+    if (!parent || parent === document.body || parent.children.length !== 2) return {};
+    const branch = node => { while (node.parentElement !== parent) node = node.parentElement; return node; };
+    const groups = { code: branch(code), readme: branch(readme) };
+    return groups.code === groups.readme ? {} : { parent, ...groups };
+  }
+  function repoSections() {
+    const main = repoMainSections();
+    return [
+      ...DEFAULT_ORDER.map(name => ({ name, column: 'repo', row: headingRow(name), title: TITLES[name] })),
+      ...['code', 'readme'].map(name => ({ name, column: 'repo-main', row: main[name], title: name === 'code' ? ui('Файлы', 'Files') : 'README' }))
+    ].filter(section => section.row);
+  }
+  function reorderRepoMain(config) {
+    const main = repoMainSections();
+    if (!main.parent) return;
+    const configured = !!repoMainDraft || Array.isArray(config.layout?.repository);
+    main.parent.classList.toggle('bgh-main-reordered', configured);
+    (repoMainDraft || repoMainOrder(config.layout?.repository)).forEach((name, index) => { main[name].style.order = configured ? String(index) : ''; });
   }
 
   function addVisuals(config) {
@@ -398,10 +431,10 @@
       if (profile && !document.getElementById('bgh-gear')) {
         const button = document.createElement('button');
         button.type = 'button'; button.id = 'bgh-gear';
+        button.dataset.bghPlacement = 'profile';
         button.title = ui('Открыть редактор BetterGitHub', 'Open BetterGitHub editor');
         button.setAttribute('aria-label', button.title);
         button.textContent = '✦ BetterGitHub';
-        button.addEventListener('click', openPanel);
         profile.append(button);
       }
     }
@@ -425,10 +458,10 @@
       button = document.createElement('button');
       button.type = 'button';
       button.id = 'bgh-gear';
+      button.dataset.bghPlacement = 'repo';
       button.title = ui('Открыть редактор BetterGitHub', 'Open BetterGitHub editor');
       button.setAttribute('aria-label', button.title);
       button.textContent = '✦ BetterGitHub';
-      button.addEventListener('click', openPanel);
     }
     if (repoName && !repoName.closest('a, button')) {
       if (button.previousElementSibling !== repoName) repoName.after(button);
@@ -466,64 +499,163 @@
     const config = siteConfig();
     applyTheme(config);
     if (page.kind === 'site') return;
-    if (page.kind === 'repo') reorderSidebar(config);
+    if (page.kind === 'repo') { reorderSidebar(config); reorderRepoMain(config); }
     else applyProfileLayout(config);
     addVisuals(config);
     replaceCodeButton(config);
+    if (page.kind === 'repo' && repoSections().some(({ name, column, row }) => !row.querySelector(`.bgh-layout-handle[data-bgh-column="${column}"][data-bgh-drag-handle="${name}"]`))) renderRepoHandles();
     const gear = document.getElementById('bgh-gear');
     if (gear) { gear.title = ui('Открыть редактор BetterGitHub', 'Open BetterGitHub editor'); gear.setAttribute('aria-label', gear.title); }
     const install = document.getElementById('bgh-install');
     if (install) { install.textContent = ui('↓ Установить', '↓ Install'); install.title = ui('Скачать файл установки', 'Download installer'); }
   }
 
-  function orderEditor(list) {
-    const host = document.getElementById('bgh-order');
-    host.replaceChildren();
+  function stopRepoEditor() {
+    repoEditController?.abort();
+    repoEditController = null;
+    document.querySelectorAll('.bgh-layout-handle[data-bgh-column^="repo"]').forEach(handle => {
+      handle.closest('.bgh-layout-target')?.classList.remove('bgh-layout-target', 'bgh-layout-drop-target');
+      handle.parentElement.classList.remove('bgh-layout-heading', 'bgh-main-layout-target');
+      handle.remove();
+    });
+    repoDraft = null;
+    repoMainDraft = null;
+    if (page?.kind === 'repo') { reorderSidebar(siteConfig()); reorderRepoMain(siteConfig()); }
+  }
+
+  function layoutStatus(text) {
+    let status = document.getElementById('bgh-layout-status');
+    if (!status) { status = document.createElement('p'); status.id = 'bgh-layout-status'; status.setAttribute('role', 'status'); document.body.append(status); }
+    status.textContent = text;
+    clearTimeout(status.bghTimer);
+    status.bghTimer = setTimeout(() => status.remove(), 4000);
+  }
+
+  function renderRepoHandles() {
+    repoEditController?.abort();
+    repoEditController = new AbortController();
+    const signal = repoEditController.signal;
+    document.querySelectorAll('.bgh-layout-handle[data-bgh-column^="repo"]').forEach(node => node.remove());
     let dragged = null;
-    list.forEach((name, index) => {
-      const row = document.createElement('div');
-      row.className = 'bgh-order-row';
-      row.draggable = true;
-      row.title = `${ui('Перетащить', 'Drag')} ${TITLES[name]}`;
-      row.addEventListener('dragstart', event => {
-        dragged = name;
-        row.classList.add('bgh-order-row--dragging');
+    const orderFor = column => column === 'repo' ? (repoDraft || sanitizeOrder(siteConfig().layout?.sidebar)) : (repoMainDraft || repoMainOrder(siteConfig().layout?.repository));
+    const move = (column, from, to) => {
+      const order = [...orderFor(column)];
+      const fromIndex = order.indexOf(from), toIndex = order.indexOf(to);
+      if (fromIndex < 0 || toIndex < 0 || from === to) return;
+      order.splice(fromIndex, 1);
+      order.splice(toIndex, 0, from);
+      if (document.querySelector('#bgh-dialog[open]')) {
+        if (column === 'repo') repoDraft = order;
+        else repoMainDraft = order;
+        apply();
+      } else {
+        const key = siteKey(page);
+        repoSaveQueue = repoSaveQueue.then(async () => {
+          const previous = settings.sites?.[key] || {};
+          const next = { ...settings, sites: { ...(settings.sites || {}), [key]: { ...previous, layout: { ...(previous.layout || {}), [column === 'repo' ? 'sidebar' : 'repository']: order } } } };
+          await storageSet(next);
+          settings = next;
+          if (siteKey(page) === key) apply();
+          layoutStatus(ui('Расположение сохранено локально', 'Layout saved locally'));
+        }).catch(error => layoutStatus(ui('Не удалось сохранить: ', 'Could not save: ') + error.message));
+      }
+    };
+    for (const { name, column, row, title } of repoSections()) {
+      row.classList.add('bgh-layout-target');
+      const handle = document.createElement('button');
+      handle.type = 'button';
+      handle.className = 'bgh-layout-handle';
+      handle.dataset.bghDragHandle = name;
+      handle.dataset.bghColumn = column;
+      handle.draggable = true;
+      handle.innerHTML = '<svg viewBox="0 0 10 16" width="10" height="16" aria-hidden="true"><circle cx="3" cy="3" r="1.3"/><circle cx="7" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="7" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="7" cy="13" r="1.3"/></svg>';
+      handle.title = ui('Переместить ', 'Move ') + title;
+      handle.setAttribute('aria-label', handle.title + ui('; стрелки вверх и вниз меняют порядок', '; use the up and down arrow keys to reorder'));
+      let pointerDrag = null;
+      let dragFrame = null;
+      const clearPointerDrag = () => {
+        pointerDrag = null;
+        cancelAnimationFrame(dragFrame);
+        dragFrame = null;
+        handle.classList.remove('bgh-layout-dragging');
+        document.querySelectorAll('.bgh-layout-drop-target').forEach(node => node.classList.remove('bgh-layout-drop-target'));
+      };
+      handle.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        handle.focus({ preventScroll: true });
+        handle.setPointerCapture(event.pointerId);
+        pointerDrag = { x: event.clientX, y: event.clientY, target: null };
+      }, { signal });
+      handle.addEventListener('pointermove', event => {
+        if (!pointerDrag || Math.hypot(event.clientX - pointerDrag.x, event.clientY - pointerDrag.y) < 4) return;
+        handle.classList.add('bgh-layout-dragging');
+        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.bgh-layout-target');
+        const targetHandle = target?.querySelector('[data-bgh-column="' + column + '"]');
+        document.querySelectorAll('.bgh-layout-drop-target').forEach(node => node.classList.remove('bgh-layout-drop-target'));
+        pointerDrag.target = targetHandle?.dataset.bghDragHandle || null;
+        if (pointerDrag.target && pointerDrag.target !== name) target.classList.add('bgh-layout-drop-target');
+        pointerDrag.clientX = event.clientX;
+        pointerDrag.clientY = event.clientY;
+        if (!dragFrame) {
+          const scroll = () => {
+            if (!pointerDrag) return;
+            const y = pointerDrag.clientY;
+            const amount = y < 60 ? -18 : y > innerHeight - 60 ? 18 : 0;
+            if (amount) {
+              window.scrollBy(0, amount);
+              const row = document.elementFromPoint(pointerDrag.clientX, y)?.closest('.bgh-layout-target');
+              pointerDrag.target = row?.querySelector('[data-bgh-column="' + column + '"]')?.dataset.bghDragHandle || null;
+              document.querySelectorAll('.bgh-layout-drop-target').forEach(node => node.classList.remove('bgh-layout-drop-target'));
+              if (pointerDrag.target && pointerDrag.target !== name) row.classList.add('bgh-layout-drop-target');
+            }
+            dragFrame = requestAnimationFrame(scroll);
+          };
+          dragFrame = requestAnimationFrame(scroll);
+        }
+      }, { signal });
+      handle.addEventListener('pointerup', event => {
+        if (!pointerDrag) return;
+        const to = pointerDrag.target;
+        clearPointerDrag();
+        if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+        if (to) move(column, name, to);
+      }, { signal });
+      handle.addEventListener('pointercancel', clearPointerDrag, { signal });
+      signal.addEventListener('abort', clearPointerDrag, { once: true });
+      handle.addEventListener('dragstart', event => {
+        dragged = { name, column };
         event.dataTransfer?.setData('text/plain', name);
         if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
-      });
-      row.addEventListener('dragover', event => {
-        if (!dragged || dragged === name) return;
-        event.preventDefault();
-        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-        row.classList.add('bgh-order-row--target');
-      });
-      row.addEventListener('dragleave', () => row.classList.remove('bgh-order-row--target'));
-      row.addEventListener('drop', event => {
-        event.preventDefault();
-        row.classList.remove('bgh-order-row--target');
-        if (!dragged || dragged === name) return;
-        const targetIndex = list.indexOf(name);
-        list.splice(list.indexOf(dragged), 1);
-        list.splice(targetIndex, 0, dragged);
-        orderEditor(list);
-      });
-      row.addEventListener('dragend', () => {
+      }, { signal });
+      handle.addEventListener('dragend', () => {
         dragged = null;
-        host.querySelectorAll('.bgh-order-row').forEach(item => item.classList.remove('bgh-order-row--dragging', 'bgh-order-row--target'));
-      });
-      const label = document.createElement('span');
-      label.textContent = TITLES[name];
-      const up = document.createElement('button');
-      up.type = 'button'; up.textContent = '↑'; up.disabled = index === 0;
-      up.setAttribute('aria-label', `${ui('Поднять', 'Move up')} ${TITLES[name]}`);
-      up.addEventListener('click', () => { [list[index - 1], list[index]] = [list[index], list[index - 1]]; orderEditor(list); });
-      const down = document.createElement('button');
-      down.type = 'button'; down.textContent = '↓'; down.disabled = index === list.length - 1;
-      down.setAttribute('aria-label', `${ui('Опустить', 'Move down')} ${TITLES[name]}`);
-      down.addEventListener('click', () => { [list[index], list[index + 1]] = [list[index + 1], list[index]]; orderEditor(list); });
-      row.append(label, up, down); host.append(row);
-    });
-    host.dataset.order = JSON.stringify(list);
+        document.querySelectorAll('.bgh-layout-drop-target').forEach(node => node.classList.remove('bgh-layout-drop-target'));
+      }, { signal });
+      handle.addEventListener('keydown', event => {
+        if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const visible = orderFor(column).filter(id => repoSections().some(section => section.name === id && section.column === column));
+        const to = visible[visible.indexOf(name) + (event.key === 'ArrowUp' ? -1 : 1)];
+        if (to) move(column, name, to);
+      }, { signal });
+      row.addEventListener('dragover', event => {
+        if (!dragged || dragged.column !== column || dragged.name === name) return;
+        event.preventDefault();
+        row.classList.add('bgh-layout-drop-target');
+      }, { signal });
+      row.addEventListener('dragleave', () => row.classList.remove('bgh-layout-drop-target'), { signal });
+      row.addEventListener('drop', event => {
+        if (!dragged || dragged.column !== column) return;
+        event.preventDefault();
+        row.classList.remove('bgh-layout-drop-target');
+        move(column, dragged.name, name);
+        dragged = null;
+      }, { signal });
+      const heading = column === 'repo' ? row.querySelector('h2, h3') : row;
+      heading.classList.add(column === 'repo' ? 'bgh-layout-heading' : 'bgh-main-layout-target');
+      heading.append(handle);
+    }
   }
 
   function renderProfileHandles() {
@@ -556,8 +688,9 @@
         function move(from, to) {
           const order = currentProfileOrder(profileSections()[column], allowed);
           if (!order.includes(from) || !order.includes(to) || from === to) return;
+          const targetIndex = order.indexOf(to);
           order.splice(order.indexOf(from), 1);
-          order.splice(order.indexOf(to), 0, from);
+          order.splice(targetIndex, 0, from);
           profileDraft[column] = sanitizeProfileOrder(order, allowed);
           applyProfileLayout(siteConfig());
         }
@@ -671,7 +804,7 @@
       if (color) appearance[name] = color;
     }
     const layout = page.kind === 'repo'
-      ? { sidebar: JSON.parse(document.getElementById('bgh-order').dataset.order) }
+      ? { sidebar: [...(repoDraft || sanitizeOrder(current.layout?.sidebar))], ...((repoMainSections().parent || current.layout?.repository) ? { repository: [...(repoMainDraft || repoMainOrder(current.layout?.repository))] } : {}) }
       : { profile: profileDraft?.main || current.layout?.profile || PROFILE_MAIN_ORDER, profileSidebar: profileDraft?.side || current.layout?.profileSidebar || PROFILE_SIDE_ORDER };
     return {
       banner: values.banner, icon: values.icon, installUrl: values.installUrl,
@@ -813,7 +946,7 @@
     for (const [value, ru, en] of [
       ['none', 'Нет', 'None'], ['gradient', 'Мягкий градиент', 'Soft gradient'], ['glow', 'Свечение', 'Glow']
     ]) text(`[name="effect"] option[value="${value}"]`, ru, en);
-    text('#bgh-form > h3', 'Порядок блоков', 'Section order');
+    text('#bgh-layout-hint', 'Перемещайте блоки на странице за ручки из шести точек. Изменения сохранятся после нажатия «Сохранить локально».', 'Drag sections on the page using the six-dot handles. Changes are saved when you click “Save locally”.');
     text('#bgh-edit-layout', 'Переместить блоки профиля', 'Move profile sections');
     text('#bgh-reset', 'Сбросить локальные настройки', 'Reset local settings');
     text('#bgh-export', 'Скачать JSON', 'Download JSON');
@@ -839,7 +972,7 @@
     if (!dialog) {
       dialog = document.createElement('dialog');
       dialog.id = 'bgh-dialog';
-      dialog.innerHTML = `<form method="dialog" id="bgh-form"><header><h2>Оформление страницы</h2><button type="button" id="bgh-close" aria-label="Закрыть">×</button></header><p id="bgh-target"></p><p id="bgh-mode-hint" class="bgh-hint"></p><label>Тема<select name="theme"><option value="github">GitHub</option><option value="universe">GitHub Universe — светлая</option><option value="universe-dark">GitHub Universe — тёмная</option><option value="midnight">Полночь</option><option value="amethyst">Аметист</option><option value="forest">Лес</option><option value="light">Светлая</option></select></label><fieldset class="bgh-colors"><legend>Цвета темы</legend><label>Акцент<input name="accent" type="color"></label><label>Фон страницы<input name="base" type="color"></label><label>Поверхности<input name="surface" type="color"></label><label>Текст<input name="text" type="color"></label><label>Вторичный текст<input name="muted" type="color"></label><label>Границы<input name="border" type="color"></label></fieldset><label>Фон (HTTPS GitHub или путь в репозитории)<input name="background" type="text" placeholder="assets/background.png"></label><label>Эффект фона<select name="effect"><option value="none">Нет</option><option value="gradient">Мягкий градиент</option><option value="glow">Свечение</option></select></label><label>Баннер над About<input name="banner" type="text" placeholder="assets/banner.png"></label><label>Значок рядом с названием<input name="icon" type="text" placeholder="assets/icon.png"></label><label>Прямая ссылка установки<input name="installUrl" type="url" placeholder="https://github.com/…/releases/download/…"></label><h3>Порядок блоков</h3><div id="bgh-order"></div><footer><button type="button" id="bgh-reset">Сбросить локальные настройки</button><button type="button" id="bgh-export">Скачать JSON</button><button type="button" id="bgh-github-save">Открыть в GitHub</button><button type="submit">Сохранить локально</button></footer><p class="bgh-hint">Настройки здесь видны только вам. Для всех посетителей добавьте .bettergithub.json в репозиторий.</p></form>`;
+      dialog.innerHTML = `<form method="dialog" id="bgh-form"><header><h2>Оформление страницы</h2><button type="button" id="bgh-close" aria-label="Закрыть">×</button></header><p id="bgh-target"></p><p id="bgh-mode-hint" class="bgh-hint"></p><label>Тема<select name="theme"><option value="github">GitHub</option><option value="universe">GitHub Universe — светлая</option><option value="universe-dark">GitHub Universe — тёмная</option><option value="midnight">Полночь</option><option value="amethyst">Аметист</option><option value="forest">Лес</option><option value="light">Светлая</option></select></label><fieldset class="bgh-colors"><legend>Цвета темы</legend><label>Акцент<input name="accent" type="color"></label><label>Фон страницы<input name="base" type="color"></label><label>Поверхности<input name="surface" type="color"></label><label>Текст<input name="text" type="color"></label><label>Вторичный текст<input name="muted" type="color"></label><label>Границы<input name="border" type="color"></label></fieldset><label>Фон (HTTPS GitHub или путь в репозитории)<input name="background" type="text" placeholder="assets/background.png"></label><label>Эффект фона<select name="effect"><option value="none">Нет</option><option value="gradient">Мягкий градиент</option><option value="glow">Свечение</option></select></label><label>Баннер над About<input name="banner" type="text" placeholder="assets/banner.png"></label><label>Значок рядом с названием<input name="icon" type="text" placeholder="assets/icon.png"></label><label>Прямая ссылка установки<input name="installUrl" type="url" placeholder="https://github.com/…/releases/download/…"></label><p id="bgh-layout-hint" class="bgh-hint"></p><footer><button type="button" id="bgh-reset">Сбросить локальные настройки</button><button type="button" id="bgh-export">Скачать JSON</button><button type="button" id="bgh-github-save">Открыть в GitHub</button><button type="submit">Сохранить локально</button></footer><p class="bgh-hint">Настройки здесь видны только вам. Для всех посетителей добавьте .bettergithub.json в репозиторий.</p></form>`;
       document.body.append(dialog);
       const editLayout = document.createElement('button');
       editLayout.type = 'button';
@@ -857,13 +990,17 @@
       });
       dialog.querySelector('[name="effect"]').addEventListener('change', () => previewEditor(dialog.querySelector('form')));
       dialog.querySelector('#bgh-close').addEventListener('click', () => {
+        stopRepoEditor();
         if (profileEdit) stopProfileEditor(false);
         clearEditorPreview();
         dialog.close();
+        apply();
       });
       dialog.addEventListener('close', () => {
+        stopRepoEditor();
         if (profileEdit) stopProfileEditor(false);
         clearEditorPreview();
+        apply();
       });
       dialog.querySelector('#bgh-reset').addEventListener('click', async () => {
         const nextSettings = { ...settings, sites: { ...(settings.sites || {}) } };
@@ -871,6 +1008,7 @@
         try { await storageSet(nextSettings); }
         catch (error) { dialog.querySelector('#bgh-mode-hint').textContent = `${ui('Не удалось сохранить', 'Could not save')}: ${error.message}`; return; }
         settings = nextSettings;
+        stopRepoEditor();
         clearEditorPreview(); dialog.close(); apply();
       });
       dialog.querySelector('#bgh-export').addEventListener('click', () => exportEditorConfig(dialog.querySelector('form')));
@@ -883,11 +1021,17 @@
         if (nextSettings.mode === 'global') {
           nextSettings.theme = config.appearance.theme;
           nextSettings.global = { ...(nextSettings.global || {}), ...config.appearance };
+          nextSettings.sites[siteKey(page)] = {
+            ...(nextSettings.sites[siteKey(page)] || {}),
+            banner: config.banner, icon: config.icon, installUrl: config.installUrl, layout: config.layout
+          };
+        } else {
+          nextSettings.sites[siteKey(page)] = config;
         }
-        nextSettings.sites[siteKey(page)] = config;
         try { await storageSet(nextSettings); }
         catch (error) { dialog.querySelector('#bgh-mode-hint').textContent = `${ui('Не удалось сохранить', 'Could not save')}: ${error.message}`; return; }
         settings = nextSettings;
+        stopRepoEditor();
         previewAppearance = null;
         previewKey = '';
         if (profileEdit) stopProfileEditor(true);
@@ -910,12 +1054,11 @@
     form.elements.banner.value = config.banner || '';
     form.elements.icon.value = config.icon || '';
     form.elements.installUrl.value = config.installUrl || '';
-    orderEditor(sanitizeOrder(config.layout?.sidebar));
-    dialog.querySelector('#bgh-order').hidden = page.kind !== 'repo';
-    dialog.querySelector('#bgh-order').previousElementSibling.hidden = page.kind !== 'repo';
+    dialog.querySelector('#bgh-layout-hint').hidden = page.kind !== 'repo';
     dialog.querySelector('#bgh-edit-layout').hidden = page.kind !== 'profile';
     globalThis.BGHColorPicker?.attach(dialog);
     if (!dialog.open) dialog.show();
+    if (page.kind === 'repo' && !repoDraft) { repoDraft = sanitizeOrder(config.layout?.sidebar); repoMainDraft = repoMainOrder(config.layout?.repository); reorderSidebar(config); }
     if (page.kind === 'profile' && !profileEdit) startProfileEditor();
   }
 
@@ -1047,6 +1190,7 @@
       return;
     }
     if (profileEdit) stopProfileEditor(false);
+    stopRepoEditor();
     clearEditorPreview();
     const openDialog = document.getElementById('bgh-dialog');
     if (openDialog?.open) openDialog.close();
@@ -1081,11 +1225,17 @@
     settings = { ...DEFAULT_SETTINGS, ...(changes.settings.newValue || {}) };
     apply();
     const dialog = document.getElementById('bgh-dialog');
-    if (dialog) { translateEditor(dialog); if (dialog.open) orderEditor(sanitizeOrder(siteConfig().layout?.sidebar)); }
+    if (dialog) translateEditor(dialog);
     if (profileEdit) renderProfileHandles();
     }
   });
   addEventListener('popstate', schedule);
+  document.addEventListener('click', event => {
+    if (!event.target.closest?.('#bgh-gear')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openPanel();
+  }, true);
   addEventListener('turbo:load', schedule);
   new MutationObserver(records => {
     if (records.some(record => !record.target.closest?.('#bgh-cursor-trail, #bgh-dialog, #bgh-gear-menu'))) schedule();

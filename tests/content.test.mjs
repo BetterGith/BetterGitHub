@@ -25,7 +25,9 @@ async function page(config, { settings = { mode: 'site', theme: 'universe', site
   window.chrome = {
     storage: {
       local: { get: (_, callback) => callback({ settings }), set: (_, callback) => callback() },
-      onChanged: { addListener() {} }
+      onChanged: { addListener(callback) {
+        window.updateBetterGitHubSettings = value => callback({ settings: { newValue: value } }, 'local');
+      } }
     },
     runtime: { sendMessage: (_, callback) => callback({ config, assetBase, installUrl: null }) }
   };
@@ -55,6 +57,29 @@ test('applies repository JSON to current GitHub sidebar and install action', asy
   dom.window.close();
 });
 
+test('turning themes off restores GitHub even when the page has an author theme', async () => {
+  const settings = { mode: 'site', theme: 'midnight', sites: {} };
+  const dom = await page({
+    appearance: { theme: 'universe', accent: '#008b2b', background: 'assets/bg.png' },
+    layout: { sidebar: ['contributors', 'about', 'releases', 'packages', 'languages'] }
+  }, { settings, markup: html.replace(/<html(?=[\s>])/, '<html data-color-mode="dark"') });
+  const { document, updateBetterGitHubSettings } = dom.window;
+  const root = document.documentElement;
+  assert.equal(root.getAttribute('data-color-mode'), 'light');
+  assert.equal(root.dataset.bghBackground, 'yes');
+  updateBetterGitHubSettings({ ...settings, themeDisabled: true });
+  assert.equal(root.dataset.bgh, 'github');
+  assert.equal(root.getAttribute('data-color-mode'), 'dark');
+  assert.equal(root.dataset.bghBackground, 'no');
+  assert.equal(root.style.getPropertyValue('--bgh-accent'), '');
+  assert.equal(document.getElementById('bgh-cursor-trail'), null);
+  assert.ok(document.querySelector('.bgh-reordered'));
+  updateBetterGitHubSettings({ ...settings, themeDisabled: false });
+  assert.equal(root.dataset.bghTheme, 'universe');
+  assert.equal(root.dataset.bghBackground, 'yes');
+  dom.window.close();
+});
+
 test('rejects script URLs and off-site install redirects', async () => {
   const dom = await page({ banner: 'javascript:alert(1)', icon: 'https://evil.example/icon.png', installUrl: 'https://github.com/redirect?url=https://evil.example' });
   const doc = dom.window.document;
@@ -77,6 +102,8 @@ test('keeps GitHub gear native and opens the BetterGitHub editor from its own bu
   assert.equal(nativeClicks, 1);
   assert.equal(doc.getElementById('bgh-dialog'), null);
   assert.equal(doc.getElementById('bgh-gear').textContent, '✦ BetterGitHub');
+  const replacement = doc.getElementById('bgh-gear').cloneNode(true);
+  doc.getElementById('bgh-gear').replaceWith(replacement);
   doc.getElementById('bgh-gear').click();
   assert.equal(doc.getElementById('bgh-dialog')?.open, true);
   assert.equal(nativeClicks, 1);
@@ -290,6 +317,8 @@ test('saving page editor updates the visible global theme and colors', async () 
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(saved.theme, 'amethyst');
   assert.equal(saved.global.base, '#112233');
+  assert.equal(Object.keys(saved.sites).length, 1);
+  assert.equal(Object.values(saved.sites)[0].appearance, undefined);
   assert.equal(doc.documentElement.dataset.bghTheme, 'amethyst');
   assert.equal(doc.documentElement.style.getPropertyValue('--bgh-base'), '#112233');
   dom.window.close();
@@ -301,7 +330,7 @@ test('site mode without a repository appearance uses original GitHub theme', asy
   dom.window.close();
 });
 
-test('dragging editor cards changes exported sidebar order while arrow controls remain available', async () => {
+test('six-dot handles reorder repository sections on the page and export the draft', async () => {
   const dom = await page({});
   const { window } = dom;
   const doc = window.document;
@@ -310,16 +339,18 @@ test('dragging editor cards changes exported sidebar order while arrow controls 
   window.URL.revokeObjectURL = () => {};
   doc.addEventListener('click', event => { if (event.target.download) event.preventDefault(); });
   doc.getElementById('bgh-gear').click();
-  const rows = doc.querySelectorAll('.bgh-order-row');
-  assert.equal(rows.length, 5);
-  assert.equal(rows[0].draggable, true);
-  rows[0].dispatchEvent(new window.Event('dragstart', { bubbles: true }));
-  rows[3].dispatchEvent(new window.Event('dragover', { bubbles: true, cancelable: true }));
-  rows[3].dispatchEvent(new window.Event('drop', { bubbles: true, cancelable: true }));
-  assert.deepEqual(JSON.parse(doc.getElementById('bgh-order').dataset.order), ['releases', 'packages', 'contributors', 'about', 'languages']);
-  doc.querySelector('[aria-label="Поднять About"]').click();
+  assert.equal(doc.querySelector('#bgh-order'), null);
+  const handles = doc.querySelectorAll('.bgh-layout-handle');
+  assert.equal(handles.length, 5);
+  assert.equal(handles[0].draggable, true);
+  assert.equal(handles[0].querySelectorAll('svg circle').length, 6);
+  handles[0].dispatchEvent(new window.Event('dragstart', { bubbles: true }));
+  handles[3].closest('.bgh-layout-target').dispatchEvent(new window.Event('dragover', { bubbles: true, cancelable: true }));
+  handles[3].closest('.bgh-layout-target').dispatchEvent(new window.Event('drop', { bubbles: true, cancelable: true }));
+  assert.equal(handles[0].closest('.bgh-layout-target').style.order, '3');
+  handles[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
   const expected = ['releases', 'packages', 'about', 'contributors', 'languages'];
-  assert.deepEqual(JSON.parse(doc.getElementById('bgh-order').dataset.order), expected);
+  assert.equal(handles[0].closest('.bgh-layout-target').style.order, '2');
   doc.getElementById('bgh-export').click();
   const reader = new window.FileReader();
   const json = await new Promise((resolve, reject) => {
@@ -328,6 +359,29 @@ test('dragging editor cards changes exported sidebar order while arrow controls 
     reader.readAsText(blob);
   });
   assert.deepEqual(json.layout.sidebar, expected);
+  doc.getElementById('bgh-close').click();
+  assert.equal(doc.querySelectorAll('.bgh-layout-handle').length, 5);
+  assert.equal(handles[0].parentElement, null);
+  assert.equal(doc.querySelector('.bgh-reordered'), null);
+  dom.window.close();
+});
+
+test('file panel moves below README from the page and persists without opening the editor', async () => {
+  const markup = html.replace('<main>', '<main><div id="repo-main"><section id="files"><div data-testid="directory-content">Files</div></section><section id="repo-readme"><article class="markdown-body">README</article></section></div>');
+  const dom = await page({}, { markup });
+  const { window } = dom;
+  const doc = window.document;
+  let saved;
+  window.chrome.storage.local.set = (value, callback) => { saved = value.settings; callback(); };
+  const grip = doc.querySelector('[data-bgh-column="repo-main"][data-bgh-drag-handle="code"]');
+  assert.ok(grip);
+  assert.equal(doc.querySelector('#bgh-dialog'), null);
+  grip.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(doc.getElementById('files').style.order, '1');
+  assert.equal(doc.getElementById('repo-readme').style.order, '0');
+  assert.deepEqual(Array.from(Object.values(saved.sites)[0].layout.repository), ['readme', 'code']);
+  assert.equal(Object.values(saved.sites)[0].appearance, undefined);
   dom.window.close();
 });
 

@@ -28,6 +28,7 @@ test('theme selection waits for explicit save', async () => {
   assert.equal(saved.length, 1);
   assert.equal(saved[0].theme, 'universe');
   assert.equal(saved[0].mode, 'global');
+  assert.deepEqual(Array.from(saved[0].recentThemes), ['universe']);
   assert.equal(saved[0].global.accent, '#008b2b');
   assert.equal(window.document.getElementById('status').textContent, 'Настройки сохранены');
   dom.window.close();
@@ -131,5 +132,53 @@ test('language changes update the page and preserve other settings', async () =>
   assert.equal(window.document.querySelector('.save-button').textContent, 'Save settings');
   assert.equal(window.document.querySelector('.theme-card--forest strong').textContent, 'Forest');
   assert.equal(window.document.getElementById('palette-hint').textContent, 'Adjust the selected card’s colors. Choosing another card restores its palette.');
+  dom.window.close();
+});
+
+test('failed storage write reports an error instead of success', async () => {
+  const html = readFileSync(new URL('../options.html', import.meta.url), 'utf8');
+  const script = readFileSync(new URL('../options.js', import.meta.url), 'utf8');
+  const dom = new JSDOM(html, { url: 'https://extension.example/options.html', runScripts: 'outside-only' });
+  const { window } = dom;
+  window.chrome = {
+    runtime: { lastError: null },
+    storage: { local: {
+      get: (_, callback) => callback({ settings: { mode: 'global', theme: 'forest', global: {}, sites: {} } }),
+      set: (_, callback) => {
+        window.chrome.runtime.lastError = { message: 'Quota exceeded' };
+        callback();
+        window.chrome.runtime.lastError = null;
+      }
+    } }
+  };
+  window.eval(script);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  window.document.getElementById('settings').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.match(window.document.getElementById('status').textContent, /Не удалось сохранить/);
+  assert.equal(window.document.getElementById('status').classList.contains('is-error'), true);
+  dom.window.close();
+});
+
+test('compact settings navigation and theme search keep the selected theme available', async () => {
+  const html = readFileSync(new URL('../options.html', import.meta.url), 'utf8');
+  const script = readFileSync(new URL('../options.js', import.meta.url), 'utf8');
+  const dom = new JSDOM(html, { url: 'https://extension.example/options.html', runScripts: 'outside-only' });
+  const { window } = dom;
+  window.chrome = { storage: { local: {
+    get: (_, callback) => callback({ settings: { mode: 'global', theme: 'forest', global: {}, sites: {} } }),
+    set: (_, callback) => callback()
+  } } };
+  window.eval(script);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  const doc = window.document;
+  doc.getElementById('theme-search').value = 'лес';
+  doc.getElementById('theme-search').dispatchEvent(new window.Event('input', { bubbles: true }));
+  assert.equal(doc.querySelectorAll('.theme-card:not([hidden])').length, 1);
+  assert.equal(doc.querySelector('.theme-card--forest input').checked, true);
+  doc.querySelector('[data-panel="advanced"]').click();
+  assert.equal(doc.getElementById('themes-panel').hidden, true);
+  assert.equal(doc.getElementById('advanced-panel').hidden, false);
+  assert.equal(doc.querySelector('[data-panel="advanced"]').getAttribute('aria-pressed'), 'true');
   dom.window.close();
 });

@@ -1,4 +1,6 @@
 dist/
+test-results/
+web-ext-artifacts/
 node_modules/
 .chrome-test*/
 .chrome-smoke/
