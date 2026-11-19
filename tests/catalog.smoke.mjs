@@ -21,6 +21,12 @@ const search=p.locator('#plugin-search');await search.fill('PAGE NAV');assert.eq
 const configure=p.locator('[data-configure-plugin=pluginQuickNavigation]');assert.equal(await configure.textContent(),'');assert.equal(await configure.locator('svg').count(),1);
 assert.equal(await configure.evaluate(el=>el.parentElement.contains(el.closest('.plugin-card').querySelector('input[role=switch]'))),true);
 assert.equal(await p.locator('[name=pluginQuickNavigation]').isChecked(),true);
+const activeCard=p.locator('.plugin-card').filter({has:p.locator('[name=pluginQuickNavigation]')});
+assert.notEqual(await activeCard.evaluate(el=>getComputedStyle(el).boxShadow),'none');
+await p.locator('[name=pluginQuickNavigation]').uncheck();await p.mouse.move(1,1);
+await p.waitForFunction(()=>getComputedStyle(document.querySelector('[name=pluginQuickNavigation]').closest('.plugin-card')).boxShadow==='none');
+await p.locator('[name=pluginQuickNavigation]').check();await p.mouse.move(1,1);
+await p.waitForFunction(()=>getComputedStyle(document.querySelector('[name=pluginQuickNavigation]').closest('.plugin-card')).boxShadow!=='none');
 await configure.click();await p.locator('#plugin-settings-dialog[open]').waitFor();assert.equal(await p.locator('[name=pluginQuickNavigation]').isChecked(),true);await p.locator('#plugin-settings-dialog [data-close]').click();
 await search.fill('zzzz-unknown');assert.equal(await p.locator('.plugin-card:not([hidden])').count(),0);assert.equal(await p.locator('#plugin-empty').isVisible(),true);
 await search.fill('');await p.screenshot({path:'test-results/catalog-polish-plugins.png',fullPage:true});
