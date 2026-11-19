@@ -14,9 +14,9 @@
     ru: {
       title: 'BetterGitHub — магазин', settingsSections: 'Разделы магазина', themeNav: 'Темы', pluginsNav: 'Плагины',
       themeHeading: 'Темы оформления', themeDescription: 'Выбери тему для GitHub. Изменения сохраняются и применяются сразу.',
-      moreActions: 'Другие действия', signIn: 'Войти через GitHub', accountUnavailable: 'Вход через GitHub пока не подключён.', close: 'Закрыть',
+      settingsMenu: 'Настройки', moreActions: 'Другие действия', signIn: 'Войти через GitHub', accountUnavailable: 'Вход через GitHub пока не подключён.', close: 'Закрыть',
       pluginsDescription: 'Дополнения для интерфейса и функций GitHub.', officialPlugin: 'Официальный плагин',
-      themeSort: 'Сортировка тем', sortRecommended: 'Рекомендуемые', sortName: 'По названию', themeFilters: 'Фильтры тем',
+      pluginSearch: 'Поиск плагинов', noPlugins: 'Ничего не найдено.', pluginsFound: 'Найдено плагинов', themeSort: 'Сортировка тем', sortRecommended: 'Рекомендуемые', sortName: 'По названию', themeFilters: 'Фильтры тем',
       filterAll: 'Все', filterLight: 'Светлые', filterDark: 'Тёмные',
       featured: 'Рекомендуем', featuredDescription: 'Тёмная тема с ярким зелёным акцентом.', chooseTheme: 'Выбрать тему',
       themeList: 'Доступные темы', themeSearch: 'Поиск темы', noThemes: 'Ничего не найдено.', themeHelp: 'Настроить цвета и источник оформления можно в дополнительном разделе.',
@@ -40,9 +40,9 @@
     en: {
       title: 'BetterGitHub Store', settingsSections: 'Store sections', themeNav: 'Themes', pluginsNav: 'Plugins',
       themeHeading: 'Themes', themeDescription: 'Choose a GitHub theme. Changes save and apply immediately.',
-      moreActions: 'More actions', signIn: 'Sign in with GitHub', accountUnavailable: 'GitHub sign-in is not connected yet.', close: 'Close',
+      settingsMenu: 'Settings', moreActions: 'More actions', signIn: 'Sign in with GitHub', accountUnavailable: 'GitHub sign-in is not connected yet.', close: 'Close',
       pluginsDescription: 'Add-ons for the GitHub interface and features.', officialPlugin: 'Official plugin',
-      themeSort: 'Sort themes', sortRecommended: 'Recommended', sortName: 'By name', themeFilters: 'Filter themes',
+      pluginSearch: 'Search plugins', noPlugins: 'No plugins found.', pluginsFound: 'Plugins found', themeSort: 'Sort themes', sortRecommended: 'Recommended', sortName: 'By name', themeFilters: 'Filter themes',
       filterAll: 'All', filterLight: 'Light', filterDark: 'Dark',
       featured: 'Recommended', featuredDescription: 'A dark theme with a bright green accent.', chooseTheme: 'Choose theme',
       themeList: 'Available themes', themeSearch: 'Search themes', noThemes: 'No themes found.', themeHelp: 'Customize colors and appearance source in Advanced.',
@@ -91,6 +91,7 @@
     }
     paletteHint.textContent = strings[paletteFields.disabled ? 'paletteOriginal' : 'paletteCustom'];
     sortThemes();
+    filterPlugins();
     if (pluginStatus.textContent) pluginStatus.textContent = strings.saveFailed;
     if (statusKey) setStatus(statusKey);
   }
@@ -124,6 +125,20 @@
     gallery.append(...cards);
     filterThemes();
   }
+
+  const pluginSearch = document.getElementById('plugin-search');
+  function filterPlugins() {
+    const terms = pluginSearch.value.trim().toLocaleLowerCase(language).split(/\s+/).filter(Boolean);
+    let count = 0;
+    for (const card of document.querySelectorAll('.plugin-card')) {
+      const searchable = `${card.textContent} ${card.querySelector('input[role="switch"]')?.name || ''}`.toLocaleLowerCase(language);
+      card.hidden = !terms.every(term => searchable.includes(term));
+      if (!card.hidden) count++;
+    }
+    document.getElementById('plugin-empty').hidden = count !== 0;
+    document.getElementById('plugin-search-status').textContent = terms.length ? `${translations[language].pluginsFound}: ${count}` : '';
+  }
+  pluginSearch.addEventListener('input', filterPlugins);
 
   const palettes = {
     'compact-light': { base: '#ffffff', surface: '#f6f8fa', text: '#1f2328', muted: '#59636e', border: '#d1d9e0', accent: '#0969da' },

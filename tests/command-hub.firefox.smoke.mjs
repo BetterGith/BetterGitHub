@@ -32,7 +32,11 @@ try {
   await driver.wait(until.elementLocated(By.css('[data-testid="directory-content"]')),15000);
   await driver.wait(until.elementLocated(By.id('bgh-command-palette')),15000);
   await driver.wait(async()=>{
-    try { await find('#bgh-command-palette').click(); return true; }
+    try {
+      if (await driver.executeScript('return Boolean(document.querySelector("#bgh-tools-dialog[open] [role=combobox]"))')) return true;
+      await find('#bgh-command-palette').click();
+      return Boolean(await driver.executeScript('return document.querySelector("#bgh-tools-dialog[open] [role=combobox]") !== null'));
+    }
     catch(error) { if(error.name==='StaleElementReferenceError')return false; throw error; }
   },5000);
   let input=await find('#bgh-tools-dialog [role="combobox"]'); await input.sendKeys('Clone this repository',Key.ENTER);

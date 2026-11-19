@@ -30,6 +30,7 @@ Repository Switcher keeps up to 30 recent GitHub repositories locally. Its histo
 - Compact UI sidebar separators and spacing are overridden independently of toolbar readiness and late GitHub utility layers, in both light and dark variants. The override excludes README content.
 - Firefox injects only the scoped compact sidebar overrides as a user stylesheet; Chromium loads the same bundled file normally. Host access and permissions are unchanged.
 - Theme cards, the recommended theme and recent-theme popup now use bundled screenshots of all 11 themes on the same public FigCraft page. Refresh listing captures to show the real previews instead of schematic bars. Preview images load locally and add no network access.
+- Catalogue refinements: shorter recommendation banner with a cropped screenshot, rectangular tone filters, refreshed section icons, visible theme authors, local plugin search and icon-only Configure buttons beside plugin switches. The green hover/selection treatment is on theme cards; the profile editor button uses the normal GitHub hover treatment.
 - Existing store artwork and currently published metadata have not been verified against the dashboards in this change.
 
 ## Permissions justification

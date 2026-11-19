@@ -117,13 +117,13 @@
 #bgh-gear[data-bgh-placement="repo-settings"] { display: flex; justify-content: center; width: 100%; margin: 12px 0 0; padding: 8px 12px; font: inherit; color: var(--fgColor-default); }
 #bgh-gear[data-bgh-placement="profile-action"]:hover,
 #bgh-gear[data-bgh-placement="profile-action"]:focus-visible {
-  background: color-mix(in srgb, #29d98b 16%, var(--button-default-bgColor-rest, #161b22));
-  border-color: #29d98b;
-  box-shadow: 0 0 12px #29d98b44;
+  background: var(--button-default-bgColor-hover, var(--bgColor-muted, #21262d));
+  border-color: var(--borderColor-default, #30363d);
+  box-shadow: none;
   filter: none;
   outline: none;
 }
-#bgh-gear[data-bgh-placement="profile-action"]:focus-visible { outline: 2px solid #29d98b; }
+#bgh-gear[data-bgh-placement="profile-action"]:focus-visible { outline: 2px solid var(--focus-outlineColor, #4493f8); }
 @media (prefers-reduced-motion: no-preference) {
   #bgh-gear[data-bgh-placement="profile-action"] { transition: background-color .16s, border-color .16s, box-shadow .16s; }
 }

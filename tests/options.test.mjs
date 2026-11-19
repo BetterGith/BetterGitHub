@@ -3,6 +3,19 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 
+test('plugin search filters names/descriptions without changing saved enablement and follows the UI language',async()=>{
+ const dom=new JSDOM(readFileSync(new URL('../options.html',import.meta.url),'utf8'),{url:'https://extension.example/options.html#plugins',runScripts:'outside-only'});
+ const {window}=dom;const values={settings:{language:'ru',theme:'compact',global:{},sites:{}},pluginQuickNavigation:true};const writes=[];
+ window.chrome={storage:{local:{get:(_,done)=>done(values),set:(patch,done)=>{Object.assign(values,patch);writes.push(patch);done();}}}};
+ window.eval(readFileSync(new URL('../options.js',import.meta.url),'utf8'));await new Promise(resolve=>setTimeout(resolve,0));
+ const search=window.document.getElementById('plugin-search');const type=text=>{search.value=text;search.dispatchEvent(new window.Event('input',{bubbles:true}));};
+ type('PAGE NAV');assert.equal(window.document.querySelectorAll('.plugin-card:not([hidden])').length,1);assert.equal(window.document.querySelector('.plugin-card:not([hidden]) input').checked,true);assert.equal(writes.length,0);
+ type('несуществующий-плагин');assert.equal(window.document.getElementById('plugin-empty').hidden,false);assert.equal(window.document.querySelectorAll('.plugin-card:not([hidden])').length,0);
+ type('');assert.equal(window.document.querySelectorAll('.plugin-card:not([hidden])').length,6);
+ const language=window.document.querySelector('[name=language]');language.value='en';language.dispatchEvent(new window.Event('change',{bubbles:true}));await new Promise(resolve=>setTimeout(resolve,0));
+ assert.equal(search.placeholder,'Search plugins');type('light themes');assert.equal(window.document.querySelectorAll('.plugin-card:not([hidden])').length,1);dom.window.close();
+});
+
 test('navigation plugins have separate switches, save immediately and keep the Plugins tab selected', async () => {
   const html = readFileSync(new URL('../options.html', import.meta.url), 'utf8');
   const script = readFileSync(new URL('../options.js', import.meta.url), 'utf8');
