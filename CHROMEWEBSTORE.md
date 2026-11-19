@@ -57,7 +57,7 @@ Store disclosures must distinguish local history from the repository identifiers
 
 ## Distribution and developer information
 
-- Current manifest/package version: 0.3.0. The new local changes need an explicitly chosen next version before another store submission.
+- Current manifest/package version: 0.3.6, prepared for packaging and store submission. Publication of this version has not been confirmed.
 - Publisher, contact email, distribution regions, live privacy-policy URL and store IDs: use the existing developer dashboard values; not inferred here.
 - Project support: https://github.com/BetterGith/BetterGitHub/issues
 - Project homepage: https://github.com/BetterGith/BetterGitHub
@@ -66,11 +66,11 @@ Store disclosures must distinguish local history from the repository identifiers
 
 GitHub release v0.3.0 was published on 2026-11-19 at commit `9767c3f`; the command-hub changes below are subsequent development and are not included in those release archives.
 
-Unreleased command-hub update: a shared registry for bundled plugin commands, local custom HTTPS/copy commands, configurable shortcuts, last 20 command identifiers, 50 local pinned repositories grouped by owner, Page Navigator for headings/comments/diffs, context-aware Quick Actions and individual Configure buttons. No additional manifest permissions. Custom HTTPS links and github.dev open only on user selection; disclose that user-selected URL templates can include the current repository/page. Command history never stores clipboard contents. Update privacy disclosures and screenshots before the next store submission.
+Prepared 0.3.6 command-hub update (not yet published): a shared registry for bundled plugin commands, local custom HTTPS/copy commands, configurable shortcuts, last 20 command identifiers, 50 local pinned repositories grouped by owner, Page Navigator for headings/comments/diffs, context-aware Quick Actions and individual Configure buttons. No additional manifest permissions. Custom HTTPS links and github.dev open only on user selection; disclose that user-selected URL templates can include the current repository/page. Command history never stores clipboard contents. Update privacy disclosures and screenshots before the next store submission.
 
 | Version | Date | Changes | Status |
 |---|---|---|---|
-| Unreleased, version not assigned | 2026-11-19 | Compact layouts, autosave, independent Command Palette, Quick Navigation, Repository Switcher and Quick Actions; Plugins deep link and local-history controls | Local draft |
+| 0.3.6 | 2026-11-19 | Compact layouts, autosave, independent Command Palette, Quick Navigation, Repository Switcher and Quick Actions; Plugins deep link and local-history controls | Prepared for submission; not published |
 
 ## Review notes
 
