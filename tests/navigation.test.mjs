@@ -38,6 +38,7 @@ async function navigation({ data = {}, url = 'https://github.com/Example/Project
       done({ ok: true });
     } }
   };
+  window.eval(readFileSync(new URL('../command-core.js', import.meta.url), 'utf8'));
   window.eval(source);
   await new Promise(resolve => setTimeout(resolve, 0));
   const launch = () => window.document.querySelector('.bgh-tool-launcher').click();
@@ -71,7 +72,7 @@ test('command palette filters results and supports keyboard selection and copy a
   item.window.document.body.dispatchEvent(new item.window.KeyboardEvent('keydown', { code: 'Space', ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true }));
   assert.equal(item.window.document.querySelector('#bgh-tools-dialog').open, true);
   const input = item.search('copy HTTPS');
-  assert.equal(item.options().length, 1);
+  assert.match(item.options()[0].textContent, /Copy HTTPS clone URL/);
   input.dispatchEvent(new item.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.deepEqual(item.copied, ['https://github.com/Example/Project.git']);
@@ -98,27 +99,12 @@ test('shortcuts do not interrupt text editing, composition or unrelated dialogs'
   item.dom.window.close();
 });
 
-test('clipboard fallback cleans up its textarea and restores focus after copying', async () => {
-  const item = await navigation();
-  item.window.navigator.clipboard.writeText = async () => { throw new Error('Clipboard unavailable'); };
-  item.window.document.execCommand = command => command === 'copy';
-  item.window.document.getElementById('native-button').focus();
-  item.launch();
-  const input = item.search('copy HTTPS');
-  input.dispatchEvent(new item.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
-  await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(item.window.document.querySelector('.bgh-tools-copy'), null);
-  assert.equal(item.window.document.activeElement.id, 'native-button');
-  assert.equal(item.window.document.getElementById('bgh-tools-toast').textContent, 'Copied');
-  item.dom.window.close();
-});
-
 test('quick navigation uses native tabs and scrolls to a heading without modifying the README', async () => {
   const item = await navigation();
   const readme = item.window.document.querySelector('.markdown-body').outerHTML;
   item.launch(); item.mode('navigation');
   assert.equal(item.options().some(option => option.textContent === 'Settings'), false);
-  assert.ok(item.options().some(option => option.getAttribute('href') === 'https://github.com/Example/Project/issues'));
+  assert.equal(item.options().some(option => option.getAttribute('href') === 'https://github.com/Example/Project/issues'), false, 'Page Navigator does not duplicate native GitHub tabs');
   item.search('Getting started'); item.options()[0].click();
   assert.deepEqual(item.scrolled, ['getting-started']);
   assert.equal(item.window.document.querySelector('.markdown-body').outerHTML, readme);
@@ -213,4 +199,72 @@ test('history obeys disabled settings and opening the store checks extension sen
   assert.equal(item.listener({ type: 'bettergithub:open-options' }, { ...item.sender, frameId: 1 }, () => {}), undefined);
   await item.send({ type: 'bettergithub:open-options' });
   assert.equal(item.options(), 1);
+});
+
+test('pins and command history serialize across tabs, deduplicate and obey full OFF', async () => {
+  const item = worker({pluginCommandPalette:true});
+  await Promise.all(['Org/One','Other/Two'].map(name=>item.send({type:'bettergithub:toggle-repository-pin',name})));
+  assert.equal(item.values.navigationPinned.length,2);
+  await item.send({type:'bettergithub:toggle-repository-pin',name:'org/one'});
+  assert.equal(item.values.navigationPinned.length,1);
+  await item.send({type:'bettergithub:clear-repository-history'});
+  assert.equal(item.values.navigationPinned[0].name,'Other/Two');
+  for(let i=0;i<24;i++)await item.send({type:'bettergithub:remember-command',id:`plugin:cmd${i}`});
+  assert.equal(item.values.commandHistory.length,20);
+  await item.send({type:'bettergithub:remember-command',id:'plugin:cmd12'});
+  assert.equal(item.values.commandHistory[0].id,'plugin:cmd12');
+  assert.equal(item.values.commandHistory.filter(c=>c.id==='plugin:cmd12').length,1);
+  item.values.settings={themeDisabled:true};
+  assert.equal((await item.send({type:'bettergithub:remember-command',id:'plugin:blocked'})).ok,false);
+  assert.equal((await item.send({type:'bettergithub:toggle-repository-pin',name:'Blocked/Repo'})).ok,false);
+  await item.send({type:'bettergithub:clear-command-history'});assert.deepEqual(item.values.commandHistory,[]);
+});
+
+test('palette runs registered plugin/custom commands and disabled plugin commands disappear immediately', async () => {
+ const item=await navigation({data:{commandCustom:[{id:'clone',title:'My clone command',type:'copy',value:'git clone git@github.com:{repo}.git'}]}});
+ item.window.BetterGitHubCommands.registerPlugin({id:'health',name:'Repo Health',flag:'pluginQuickActions',commands:()=>[{id:'analyze',title:'Analyze repository',run:()=>item.copied.push('analysis')}]});
+ item.launch();item.search('Repo Health Analyze');assert.equal(item.options().length,1);item.options()[0].click();await new Promise(r=>setTimeout(r,0));assert.deepEqual(item.copied,['analysis']);
+ item.launch();item.search('My clone');item.options()[0].click();await new Promise(r=>setTimeout(r,0));assert.equal(item.copied[1],'git clone git@github.com:Example/Project.git');
+ item.update({pluginQuickActions:false});item.launch();item.search('Analyze repository');assert.equal(item.options().length,0);item.dom.window.close();
+});
+
+test('late plugin providers load their own opt-in flag and follow subsequent storage updates',async()=>{
+ const item=await navigation({data:{pluginRepoHealth:true}});
+ item.window.BetterGitHubCommands.registerPlugin({id:'repo-health',name:'Repo Health',flag:'pluginRepoHealth',commands:()=>[{id:'analyze',title:'Analyze repository',run:()=>{}}]});
+ item.launch();item.search('Repo Health Analyze');assert.equal(item.options().length,1);
+ item.update({pluginRepoHealth:false});assert.equal(item.options().length,0);item.dom.window.close();
+});
+
+test('Page Navigator includes headings, comments and changes without inventing native tab commands', async()=>{
+ const html=markup.replace('</main>','<div id="issuecomment-12"><a class="author">Alice</a><div class="markdown-body">Check the fix</div></div><div class="file-header" data-path="src/main.rs">main.rs</div></main>');
+ const item=await navigation({html});item.mode('navigation');item.search('Alice');assert.equal(item.options().length,1);
+ item.search('main.rs');assert.equal(item.options().length,1);item.update({navigatorIncludeComments:false,navigatorIncludeChanges:false});item.search('Alice');assert.equal(item.options().length,0);item.search('main.rs');assert.equal(item.options().length,0);item.dom.window.close();
+});
+
+test('file action uses a commit SHA and actual path for permalinks, retaining selected lines',async()=>{
+ const sha='a'.repeat(40),payload={payload:{codeViewBlobLayoutRoute:{refInfo:{name:'feature/branch',currentOid:sha},path:'src/main.rs'}}};
+ const html=markup.replace('</head>',`<script type="application/json">${JSON.stringify(payload)}</script></head>`);
+ const item=await navigation({html,url:'https://github.com/Example/Project/blob/feature/branch/src/main.rs#L4-L9'});item.mode('actions');item.search('Copy file permalink');assert.equal(item.options().length,1);item.options()[0].click();await new Promise(r=>setTimeout(r,0));assert.deepEqual(item.copied,[`https://github.com/Example/Project/blob/${sha}/src/main.rs#L4-L9`]);
+ item.dom.window.close();
+});
+
+test('custom hotkeys activate commands and leave the old launch shortcut alone',async()=>{
+ const item=await navigation({data:{commandShortcuts:{commands:'Alt+Shift+C','quick-actions:copy:https':'Alt+Shift+X'}}});
+ const key=code=>item.window.document.body.dispatchEvent(new item.window.KeyboardEvent('keydown',{code,altKey:true,shiftKey:true,bubbles:true,cancelable:true}));
+ key('KeyX');await new Promise(r=>setTimeout(r,0));assert.deepEqual(item.copied,['https://github.com/Example/Project.git']);key('KeyC');assert.equal(item.window.document.querySelector('#bgh-tools-dialog').open,true);item.dom.window.close();
+});
+
+test('clipboard fallback cleans up its textarea and restores focus after copying', async () => {
+  const item = await navigation();
+  item.window.navigator.clipboard.writeText = async () => { throw new Error('Clipboard unavailable'); };
+  item.window.document.execCommand = command => command === 'copy';
+  item.window.document.getElementById('native-button').focus();
+  item.launch();
+  const input = item.search('copy HTTPS');
+  input.dispatchEvent(new item.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(item.window.document.querySelector('.bgh-tools-copy'), null);
+  assert.equal(item.window.document.activeElement.id, 'native-button');
+  assert.equal(item.window.document.getElementById('bgh-tools-toast').textContent, 'Copied');
+  item.dom.window.close();
 });

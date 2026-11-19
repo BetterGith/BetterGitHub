@@ -19,7 +19,7 @@ foreach ($browser in $targets) {
         Copy-Item -LiteralPath $sourceManifest -Destination $builtManifest
     }
     Copy-Item -LiteralPath (Join-Path $root '_locales') -Destination $out -Recurse -Force -ErrorAction Stop
-    foreach ($file in @('background.js', 'content.js', 'navigation.js', 'navigation.css', 'ui-font.css', 'content.css', 'compact-sidebar.css', 'color-picker.js', 'color-picker.css', 'options.html', 'options.js', 'options.css', 'popup.html', 'popup.css', 'popup.js')) {
+    foreach ($file in @('background.js', 'content.js', 'command-core.js', 'plugin-settings.js', 'navigation.js', 'navigation.css', 'ui-font.css', 'content.css', 'compact-sidebar.css', 'color-picker.js', 'color-picker.css', 'options.html', 'options.js', 'options.css', 'popup.html', 'popup.css', 'popup.js')) {
         Copy-Item -LiteralPath (Join-Path $root $file) -Destination (Join-Path $out $file)
     }
     $iconsOut = Join-Path $out 'icons'

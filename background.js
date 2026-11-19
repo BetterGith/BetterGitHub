@@ -104,10 +104,17 @@ async function loadConfig(owner, repository) {
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (sender.id !== chrome.runtime.id) return;
-  if (['bettergithub:open-options', 'bettergithub:remember-repository', 'bettergithub:clear-repository-history'].includes(message?.type)) {
-    if (!Number.isInteger(sender.tab?.id) || sender.frameId !== 0) return;
+  if (['bettergithub:open-options', 'bettergithub:remember-repository', 'bettergithub:clear-repository-history', 'bettergithub:toggle-repository-pin', 'bettergithub:remember-command', 'bettergithub:clear-command-history'].includes(message?.type)) {
+    const optionsPage = typeof sender.url === 'string' && sender.url.split(/[?#]/)[0] === extension.runtime.getURL?.('options.html');
+    if ((!Number.isInteger(sender.tab?.id) && !optionsPage) || (sender.frameId !== undefined && sender.frameId !== 0)) return;
     if (message.type === 'bettergithub:open-options') {
-      Promise.resolve().then(() => extension.runtime.openOptionsPage()).then(() => respond({ ok: true }), error => respond({ error: String(error) }));
+      (async () => {
+        if (message.plugin !== undefined) {
+          if (typeof message.plugin !== 'string' || !/^plugin[A-Z][A-Za-z0-9]{0,60}$/.test(message.plugin)) throw new Error('Invalid plugin');
+          await extension.tabs.create({ url: extension.runtime.getURL(`options.html?plugin=${encodeURIComponent(message.plugin)}#plugins`) });
+        } else await extension.runtime.openOptionsPage();
+        respond({ ok: true });
+      })().catch(error => respond({ error: String(error) }));
       return true;
     }
     const job = repositoryHistoryQueue.catch(() => {}).then(async () => {
@@ -115,10 +122,27 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
         await extension.storage.local.set({ navigationHistory: [] });
         return { ok: true };
       }
+      if (message.type === 'bettergithub:clear-command-history') {
+        await extension.storage.local.set({ commandHistory: [] }); return { ok: true };
+      }
+      if (message.type === 'bettergithub:remember-command') {
+        if (typeof message.id !== 'string' || !/^[a-zA-Z0-9_:/.-]{1,160}$/.test(message.id)) throw new Error('Invalid command');
+        const data = await extension.storage.local.get(['settings', 'pluginCommandPalette', 'commandHistory']);
+        if (data.settings?.themeDisabled === true || data.pluginCommandPalette !== true) return { ok: false };
+        const history = Array.isArray(data.commandHistory) ? data.commandHistory.filter(item => typeof item?.id === 'string' && item.id !== message.id) : [];
+        await extension.storage.local.set({ commandHistory: [{ id: message.id, usedAt: Date.now() }, ...history].slice(0,20) }); return { ok: true };
+      }
       const name = historyRepository(message.name);
       if (!name) throw new Error('Invalid repository');
-      const data = await extension.storage.local.get(['settings', 'pluginRepositorySwitcher', 'navigationHistory']);
+      const data = await extension.storage.local.get(['settings', 'pluginRepositorySwitcher', 'navigationHistory', 'navigationPinned']);
       if (data.settings?.themeDisabled === true || data.pluginRepositorySwitcher !== true) return { ok: false };
+      if (message.type === 'bettergithub:toggle-repository-pin') {
+        const pins = (Array.isArray(data.navigationPinned) ? data.navigationPinned : []).filter(item => historyRepository(item?.name));
+        const found = pins.some(item => item.name.toLowerCase() === name.toLowerCase());
+        if (!found && pins.length >= 50) throw new Error('At most 50 pinned repositories');
+        const next = found ? pins.filter(item => item.name.toLowerCase() !== name.toLowerCase()) : [...pins, { name, private: message.private === true, pinnedAt: Date.now() }];
+        await extension.storage.local.set({ navigationPinned: next }); return { ok: true };
+      }
       const history = (Array.isArray(data.navigationHistory) ? data.navigationHistory : [])
         .filter(item => historyRepository(item?.name) && item.name.toLowerCase() !== name.toLowerCase())
         .map(item => ({ name: item.name, private: item.private === true, visitedAt: Number.isFinite(item.visitedAt) ? item.visitedAt : 0 }));

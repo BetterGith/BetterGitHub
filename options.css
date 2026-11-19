@@ -93,6 +93,28 @@ h2 { margin: 0 0 6px; font-size: clamp(25px, 3.7vw, 38px); font-weight: 780; let
   .plugin-gallery { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 .plugin-card { gap: 8px; padding: 12px; }
+.plugin-configure { justify-self: start; padding: 5px 9px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: transparent; font-size: 12px; }
+.plugin-configure:hover { background: var(--raised); }
+#plugin-settings-dialog { width: min(700px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); color: var(--text); overflow: auto; overscroll-behavior: contain; }
+#plugin-settings-dialog::backdrop { background: #0008; overflow: hidden; overscroll-behavior: contain; }
+#plugin-settings-dialog > header { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+#plugin-settings-dialog h2 { margin: 0; font-size: 22px; }
+#plugin-settings-dialog [data-close] { margin-inline-start: auto; font-size: 23px; background: transparent; border: 0; }
+#plugin-settings-dialog button { color: var(--text); }
+.plugin-settings-content { display: grid; gap: 16px; padding: 20px; }
+.plugin-settings-section { display: grid; gap: 12px; min-width: 0; }
+.plugin-settings-section h3 { margin: 0; font-size: 16px; }
+.plugin-settings-section .help-text { margin: 0; }
+.plugin-settings-field { display: grid; gap: 5px; min-width: 0; font-size: 12px; }
+.plugin-settings-content :is(input:not([type="checkbox"]),select) { min-width: 0; width: 100%; min-height: 36px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: var(--surface); }
+.plugin-settings-content button { min-height: 32px; padding: 5px 9px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: var(--surface); font-size: 12px; }
+.shortcut-row { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+.shortcut-row .plugin-settings-field { flex: 1 1 180px; }
+.custom-command { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+.custom-command > button { justify-self: start; }
+.pinned-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; overflow-wrap: anywhere; }
+.plugin-settings-check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+#plugin-settings-dialog > .theme-status { position: sticky; bottom: 0; min-height: 38px; margin: 0; padding: 10px 20px; background: var(--panel); }
 .plugin-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
 .plugin-card .plugin-author { display: flex; align-items: center; gap: 6px; color: var(--text); font-size: 12px; }
 .official-badge { display: inline-grid; place-items: center; width: 14px; aspect-ratio: 1; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 800; }

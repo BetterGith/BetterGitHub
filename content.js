@@ -2041,7 +2041,7 @@
   }, true);
   addEventListener('turbo:load', schedule);
   new MutationObserver(records => {
-    if (records.some(record => !record.target.closest?.('#bgh-cursor-trail, #bgh-dialog, #bgh-gear-menu, #bgh-tools-dialog, #bgh-tools-launchers, #bgh-tools-toast'))) schedule();
+    if (records.some(record => !record.target.closest?.('#bgh-cursor-trail, #bgh-dialog, #bgh-gear-menu, #bgh-tools-dialog, #bgh-action-menu, #bgh-tools-launchers, #bgh-tools-toast'))) schedule();
   }).observe(document.documentElement, { childList: true, subtree: true });
   start();
 })();

@@ -4,6 +4,8 @@
   "version": "0.3.0",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
+    "test:command-hub": "powershell -NoProfile -File build.ps1 -Target chromium && node tests/command-hub.smoke.mjs",
+    "test:command-hub:firefox": "powershell -NoProfile -File build.ps1 -Target firefox && node tests/command-hub.firefox.smoke.mjs",
     "test:compact-sidebar": "powershell -NoProfile -File build.ps1 -Target chromium && node tests/compact-sidebar.smoke.mjs",
     "test:compact-sidebar:firefox": "powershell -NoProfile -File build.ps1 -Target firefox && node tests/compact-sidebar.firefox.smoke.mjs",
     "build:firefox": "powershell -NoProfile -File build.ps1 -Target firefox",

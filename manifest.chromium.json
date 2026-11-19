@@ -11,7 +11,7 @@
   "background": { "service_worker": "background.js" },
   "content_scripts": [{
     "matches": ["https://github.com/*"],
-    "js": ["color-picker.js", "content.js", "navigation.js"],
+    "js": ["color-picker.js", "content.js", "command-core.js", "navigation.js"],
     "css": ["ui-font.css", "content.css", "compact-sidebar.css", "color-picker.css", "navigation.css"],
     "run_at": "document_start"
   }],
