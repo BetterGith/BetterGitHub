@@ -112,15 +112,11 @@
     }
     if(!panel.open)panel.showModal();render();
   }
-  for(const [plugin,kind]of Object.entries(kinds)){
-    const card=document.querySelector(`[name="${plugin}"]`)?.closest('.plugin-card');if(!card)continue;
-    const configure=button(undefined,()=>void open(plugin).catch(()=>report('failed',true)),'plugin-configure');configure.dataset.configurePlugin=plugin;configure.setAttribute('aria-haspopup','dialog');
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');
-    const shape=document.createElementNS(svg.namespaceURI,'path');shape.setAttribute('d','m9 3-.7 2.3-2 .9L4 5.7 2.5 8.3l1.6 1.8v2.2l-1.6 1.8L4 16.7l2.3-.5 2 .9L9 19.5h3l.7-2.4 2-.9 2.3.5 1.5-2.6-1.6-1.8v-2.2l1.6-1.8L17 5.7l-2.3.5-2-.9L12 3Z');
-    const center=document.createElementNS(svg.namespaceURI,'circle');center.setAttribute('cx','10.5');center.setAttribute('cy','11.3');center.setAttribute('r','3');svg.append(shape,center);configure.append(svg);
-    const toggle=card.querySelector('.preference-toggle'),title=toggle.querySelector('span'),input=toggle.querySelector('input');
-    const heading=el('div',undefined,'plugin-heading'),actions=el('div',undefined,'plugin-heading-actions');
-    toggle.replaceWith(heading);toggle.replaceChildren(input);toggle.classList.add('plugin-switch');actions.append(configure,toggle);heading.append(title,actions);
+  // Headers and SVG icons are static HTML: loading or relocalizing settings must not rebuild card layout.
+  for(const plugin of Object.keys(kinds)){
+    const configure=document.querySelector(`[data-configure-plugin="${plugin}"]`);if(!configure)continue;
+    configure.addEventListener('click',()=>void open(plugin).catch(()=>report('failed',true)));
+    configure.disabled=false;
   }
   function updateLabels(){for(const b of document.querySelectorAll('[data-configure-plugin]')){const label=`${t('configure')}: ${names[kinds[b.dataset.configurePlugin]]}`;b.title=label;b.setAttribute('aria-label',label);}}
   chrome.storage.onChanged.addListener((changes,area)=>{if(area!=='local')return;for(const key of keys)if(Object.hasOwn(changes,key))preferences[key]=changes[key].newValue;updateLabels();if(panel?.open&&lastLanguage!==lang())render();});

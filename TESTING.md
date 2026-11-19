@@ -55,3 +55,8 @@ web-ext использует отладочный интерфейс Firefox д�
 Одна перезагрузка аддона без сборки не копирует изменения из корня проекта в `dist/firefox`.
 
 Инструменты: https://github.com/mozilla/web-ext, https://github.com/SeleniumHQ/selenium, https://github.com/mozilla/geckodriver.
+# Catalogue layout follow-up
+
+`npm run test:catalog` checks built Chromium options at 320, 390, 560, 620, 800, 1000, 1280, 1825 and 2285 pixels. It checks all six static card headers, the visible 20px SVG gears, switch/settings alignment, independent configuration actions, localized filtering, narrow overflow, and the recommendation image's 36% start boundary. Static headers are also checked before scripts run. `npm run test:catalog:firefox` covers the real Firefox extension options page. Inspect the resulting `test-results/catalog-*.png` files before reporting a visual fix.
+
+`build.ps1` stamps options/popup CSS and JavaScript URLs with their SHA256 prefix. Rebuild and reopen the options page when testing changes at an unchanged development version. Verify the directory being loaded; an archived snapshot is not the working build.

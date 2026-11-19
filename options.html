@@ -42,7 +42,7 @@
             </div>
             <div class="featured theme-card--universe-dark" id="featured">
               <div class="featured__copy"><span class="featured__tag" data-i18n="featured">Рекомендуем</span><h3>GitHub Universe</h3><p data-i18n="featuredDescription">Тёмная тема с ярким зелёным акцентом.</p><button type="button" id="choose-featured" data-i18n="chooseTheme">Выбрать тему</button></div>
-              <img class="theme-swatch" src="previews/universe-dark.png" width="1440" height="810" alt="" decoding="async">
+              <img class="featured__preview" src="previews/universe-dark.png" width="1440" height="810" alt="" decoding="async">
             </div>
             <div class="section-label"><h3 data-i18n="themeList">Доступные темы</h3><span id="theme-count">7</span></div>
             <div class="theme-gallery" id="theme-gallery" role="radiogroup" aria-label="Темы GitHub" data-i18n-aria="githubThemes">
@@ -74,10 +74,7 @@
                   <div class="plugin-preview__page"><i></i><i></i><i></i></div>
                   <div class="plugin-preview__page"><i></i><i></i><i></i></div>
                 </div>
-                <label class="preference-toggle">
-                  <span id="dim-plugin-title" data-i18n="dimLightThemes">Приглушение светлых тем</span>
-                  <input type="checkbox" role="switch" name="pluginDimLightThemes" aria-labelledby="dim-plugin-title" aria-describedby="dim-plugin-description" disabled>
-                </label>
+                <div class="plugin-heading"><span id="dim-plugin-title" data-i18n="dimLightThemes">Приглушение светлых тем</span><div class="plugin-heading-actions"><label class="preference-toggle plugin-switch"><input type="checkbox" role="switch" name="pluginDimLightThemes" aria-labelledby="dim-plugin-title" aria-describedby="dim-plugin-description" disabled></label></div></div>
                 <p class="plugin-author">BetterGitHub <span class="official-badge" role="img" aria-label="Официальный плагин" data-i18n-aria="officialPlugin">✓</span></p>
                 <p id="dim-plugin-description" data-i18n="dimPluginDescription">Снижает яркость фона и карточек светлых тем, сохраняя цвет текста.</p>
               </article>
@@ -86,34 +83,31 @@
                   <div class="plugin-preview__page"><i></i><i></i><i></i></div>
                   <div class="plugin-preview__palette"><i></i><i></i><i></i><i></i></div>
                 </div>
-                <label class="preference-toggle">
-                  <span id="repo-plugin-title" data-i18n="repoThemePlugin">Создание тем для репозиториев</span>
-                  <input type="checkbox" role="switch" name="pluginRepositoryThemes" aria-labelledby="repo-plugin-title" aria-describedby="repo-plugin-description" disabled>
-                </label>
+                <div class="plugin-heading"><span id="repo-plugin-title" data-i18n="repoThemePlugin">Создание тем для репозиториев</span><div class="plugin-heading-actions"><label class="preference-toggle plugin-switch"><input type="checkbox" role="switch" name="pluginRepositoryThemes" aria-labelledby="repo-plugin-title" aria-describedby="repo-plugin-description" disabled></label></div></div>
                 <p class="plugin-author">BetterGitHub <span class="official-badge" role="img" aria-label="Официальный плагин" data-i18n-aria="officialPlugin">✓</span></p>
                 <p id="repo-plugin-description" data-i18n="repoPluginDescription">Добавляет редактор оформления в настройки блока About для тех, кто может их редактировать.</p>
               </article>
               <article class="plugin-card" aria-labelledby="command-plugin-title">
                 <div class="plugin-preview plugin-preview--tools plugin-preview--command" aria-hidden="true"><div class="plugin-preview__tool"><strong>Ctrl + Shift + Space</strong><span>> Find a command</span><i></i><i></i></div></div>
-                <label class="preference-toggle"><span id="command-plugin-title" data-i18n="commandPalette">commandPalette</span><input type="checkbox" role="switch" name="pluginCommandPalette" aria-labelledby="command-plugin-title" aria-describedby="command-plugin-description" disabled></label>
+                <div class="plugin-heading"><span id="command-plugin-title" data-i18n="commandPalette">Command Palette</span><div class="plugin-heading-actions"><button type="button" class="plugin-configure" data-configure-plugin="pluginCommandPalette" aria-haspopup="dialog" aria-label="Настроить плагин" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5L3 9l1.5 1.5v3L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-1.5v-3L21 9l-2-3.5-2 .5-2-1-.5-2Z"/><circle cx="12" cy="12" r="3"/></svg></button><label class="preference-toggle plugin-switch"><input type="checkbox" role="switch" name="pluginCommandPalette" aria-labelledby="command-plugin-title" aria-describedby="command-plugin-description" disabled></label></div></div>
                 <p class="plugin-author">BetterGitHub <span class="official-badge" role="img" aria-label="Official plugin" data-i18n-aria="officialPlugin">✓</span></p>
                 <p id="command-plugin-description" data-i18n="commandPaletteDescription"></p>
               </article>
               <article class="plugin-card" aria-labelledby="navigation-plugin-title">
                 <div class="plugin-preview plugin-preview--tools plugin-preview--navigation" aria-hidden="true"><div class="plugin-preview__tool"><strong>README / Comments</strong><span>Changed files / Getting started</span><i></i><i></i></div></div>
-                <label class="preference-toggle"><span id="navigation-plugin-title" data-i18n="quickNavigation">quickNavigation</span><input type="checkbox" role="switch" name="pluginQuickNavigation" aria-labelledby="navigation-plugin-title" aria-describedby="navigation-plugin-description" disabled></label>
+                <div class="plugin-heading"><span id="navigation-plugin-title" data-i18n="quickNavigation">Page Navigator</span><div class="plugin-heading-actions"><button type="button" class="plugin-configure" data-configure-plugin="pluginQuickNavigation" aria-haspopup="dialog" aria-label="Настроить плагин" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5L3 9l1.5 1.5v3L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-1.5v-3L21 9l-2-3.5-2 .5-2-1-.5-2Z"/><circle cx="12" cy="12" r="3"/></svg></button><label class="preference-toggle plugin-switch"><input type="checkbox" role="switch" name="pluginQuickNavigation" aria-labelledby="navigation-plugin-title" aria-describedby="navigation-plugin-description" disabled></label></div></div>
                 <p class="plugin-author">BetterGitHub <span class="official-badge" role="img" aria-label="Official plugin" data-i18n-aria="officialPlugin">✓</span></p>
                 <p id="navigation-plugin-description" data-i18n="quickNavigationDescription"></p>
               </article>
               <article class="plugin-card" aria-labelledby="switcher-plugin-title">
                 <div class="plugin-preview plugin-preview--tools plugin-preview--switcher" aria-hidden="true"><div class="plugin-preview__tool"><strong>owner / project</strong><span>Recent repositories</span><i></i><i></i></div></div>
-                <label class="preference-toggle"><span id="switcher-plugin-title" data-i18n="repositorySwitcher">repositorySwitcher</span><input type="checkbox" role="switch" name="pluginRepositorySwitcher" aria-labelledby="switcher-plugin-title" aria-describedby="switcher-plugin-description" disabled></label>
+                <div class="plugin-heading"><span id="switcher-plugin-title" data-i18n="repositorySwitcher">Repository Switcher</span><div class="plugin-heading-actions"><button type="button" class="plugin-configure" data-configure-plugin="pluginRepositorySwitcher" aria-haspopup="dialog" aria-label="Настроить плагин" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5L3 9l1.5 1.5v3L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-1.5v-3L21 9l-2-3.5-2 .5-2-1-.5-2Z"/><circle cx="12" cy="12" r="3"/></svg></button><label class="preference-toggle plugin-switch"><input type="checkbox" role="switch" name="pluginRepositorySwitcher" aria-labelledby="switcher-plugin-title" aria-describedby="switcher-plugin-description" disabled></label></div></div>
                 <p class="plugin-author">BetterGitHub <span class="official-badge" role="img" aria-label="Official plugin" data-i18n-aria="officialPlugin">✓</span></p>
                 <p id="switcher-plugin-description" data-i18n="repositorySwitcherDescription"></p>
               </article>
               <article class="plugin-card" aria-labelledby="actions-plugin-title">
                 <div class="plugin-preview plugin-preview--tools plugin-preview--actions" aria-hidden="true"><div class="plugin-preview__tool"><strong>Copy link</strong><span>git clone / New issue</span><i></i><i></i></div></div>
-                <label class="preference-toggle"><span id="actions-plugin-title" data-i18n="quickActions">quickActions</span><input type="checkbox" role="switch" name="pluginQuickActions" aria-labelledby="actions-plugin-title" aria-describedby="actions-plugin-description" disabled></label>
+                <div class="plugin-heading"><span id="actions-plugin-title" data-i18n="quickActions">Quick Actions</span><div class="plugin-heading-actions"><button type="button" class="plugin-configure" data-configure-plugin="pluginQuickActions" aria-haspopup="dialog" aria-label="Настроить плагин" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5L3 9l1.5 1.5v3L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-1.5v-3L21 9l-2-3.5-2 .5-2-1-.5-2Z"/><circle cx="12" cy="12" r="3"/></svg></button><label class="preference-toggle plugin-switch"><input type="checkbox" role="switch" name="pluginQuickActions" aria-labelledby="actions-plugin-title" aria-describedby="actions-plugin-description" disabled></label></div></div>
                 <p class="plugin-author">BetterGitHub <span class="official-badge" role="img" aria-label="Official plugin" data-i18n-aria="officialPlugin">✓</span></p>
                 <p id="actions-plugin-description" data-i18n="quickActionsDescription"></p>
               </article>

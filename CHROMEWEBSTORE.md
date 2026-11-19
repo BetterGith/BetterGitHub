@@ -74,6 +74,8 @@ Unreleased command-hub update: a shared registry for bundled plugin commands, lo
 
 ## Review notes
 
+Catalogue follow-up: plugin heading controls and their SVG icons now live in static HTML, with separate settings buttons and switches. Theme author captions use a smaller regular weight. The recommendation image occupies the right 64% of the banner and crops to its height. Built options/popup pages reference CSS and scripts by deterministic content hash to avoid mixing cached assets during development. No new permissions or release version.
+
 Build with `powershell -NoProfile -File build.ps1 -Target chromium`. Package only the contents of `dist/chromium`; exclude this file, tests, dependencies, `.git` and local results. Firefox uses its own MV3 background-page declaration, not the Chromium service-worker declaration.
 
 To review the four new tools, enable them separately in Plugins. They are off by default. Test the toolbar buttons, keyboard controls, clear-history action and full extension pause. Repository/issue actions open GitHub forms or copy text; users complete any subsequent operation themselves.

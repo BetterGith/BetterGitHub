@@ -37,5 +37,17 @@ foreach ($browser in $targets) {
     Get-ChildItem -LiteralPath (Join-Path $root 'previews') -Filter '*.png' -File | ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $previewsOut $_.Name)
     }
+    # Keep options/popup HTML paired with its current assets, even when the extension version is unchanged during development.
+    foreach ($page in @('options.html', 'popup.html')) {
+        $pagePath = Join-Path $out $page
+        $html = [IO.File]::ReadAllText($pagePath)
+        $html = [regex]::Replace($html, '(?<attribute>href|src)="(?<asset>[a-zA-Z0-9_./-]+\.(?:css|js))"', {
+            param($match)
+            $asset = $match.Groups['asset'].Value
+            $revision = (Get-FileHash -LiteralPath (Join-Path $out $asset) -Algorithm SHA256).Hash.Substring(0, 12).ToLowerInvariant()
+            return $match.Groups['attribute'].Value + '="' + $asset + '?v=' + $revision + '"'
+        })
+        [IO.File]::WriteAllText($pagePath, $html, [Text.UTF8Encoding]::new($false))
+    }
     Write-Output $out
 }
