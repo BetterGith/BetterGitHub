@@ -57,6 +57,8 @@ web-ext использует отладочный интерфейс Firefox д�
 Инструменты: https://github.com/mozilla/web-ext, https://github.com/SeleniumHQ/selenium, https://github.com/mozilla/geckodriver.
 # Catalogue layout follow-up
 
+Motion checks: enter Themes/Plugins, hover cards and settings gears, toggle plugins, open and close a settings dialog. Confirm immediate saving/focus, 2px maximum hover lift, and no delayed hidden sections. Repeat with reduced motion: no entry translation, hover lift, gear rotation or dialog animation; color feedback remains. The Firefox catalogue check verifies live entry animations and the reduced-motion preference in its isolated profile.
+
 `npm run test:catalog` checks built Chromium options at 320, 390, 560, 620, 800, 1000, 1280, 1825 and 2285 pixels. It checks all six static card headers, the visible 20px SVG gears, switch/settings alignment, independent configuration actions, localized filtering, narrow overflow, and the recommendation image's 36% start boundary. Static headers are also checked before scripts run. `npm run test:catalog:firefox` covers the real Firefox extension options page. Inspect the resulting `test-results/catalog-*.png` files before reporting a visual fix.
 
 `build.ps1` stamps options/popup CSS and JavaScript URLs with their SHA256 prefix. Rebuild and reopen the options page when testing changes at an unchanged development version. Verify the directory being loaded; an archived snapshot is not the working build.

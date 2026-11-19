@@ -88,9 +88,7 @@ h2 { margin: 0 0 6px; font-size: clamp(25px, 3.7vw, 38px); font-weight: 780; let
 .theme-author .official-badge { flex: none; width: 12px; height: 12px; font-size: 9px; }
 .theme-card:is(:hover,:has(input:checked)),
 .plugin-card:is(:hover,:has(input[role="switch"]:checked)) { border-color: #29d98b; box-shadow: 0 0 12px #29d98b30; background: color-mix(in srgb, #29d98b 10%, var(--surface)); }
-@media (prefers-reduced-motion: no-preference) {
-  .theme-card, .plugin-card { transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease; }
-}
+.theme-card, .plugin-card { transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease; }
 .theme-selection { position: absolute; bottom: 20px; right: 14px; width: 16px; height: 16px; border: 1px solid #818c88; border-radius: 50%; }
 .theme-card:has(input:checked) .theme-selection { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3px #24382f; }
 .theme-swatch { display: block; width: 100%; min-width: 0; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: center top; border: 1px solid #ffffff15; border-radius: 8px; background: #0d1117; }
@@ -155,7 +153,7 @@ h2 { margin: 0 0 6px; font-size: clamp(25px, 3.7vw, 38px); font-weight: 780; let
 .plugin-preview--navigation { background: #172720; }
 .plugin-preview--switcher { background: #252038; }
 .plugin-preview--actions { background: #30241a; }
-.plugin-preview__tool { display: grid; gap: 8px; width: 76%; padding: 12px; border: 1px solid #67717d; border-radius: 7px; background: #0d1117; color: #e6edf3; box-shadow: 0 6px 14px #0004; font: 11px/1.3 var(--bgh-ui-font); }
+.plugin-preview__tool { display: grid; gap: 6px; width: 76%; padding: 9px; border: 1px solid #67717d; border-radius: 7px; background: #0d1117; color: #e6edf3; box-shadow: 0 6px 14px #0004; font: 11px/1.3 var(--bgh-ui-font); }
 .plugin-preview__tool strong { font-size: 12px; }
 .plugin-preview__tool span { color: #a1adbb; }
 .plugin-preview__tool i { height: 4px; width: 80%; border-radius: 2px; background: #364354; }
@@ -172,7 +170,7 @@ h2 { margin: 0 0 6px; font-size: clamp(25px, 3.7vw, 38px); font-weight: 780; let
 .preference-toggle input:checked { background: var(--accent); }
 .preference-toggle input:checked::before { transform: translateX(16px); background: var(--accent-ink); }
 @media (prefers-reduced-motion: no-preference) {
-  .preference-toggle input, .preference-toggle input::before { transition: background-color .15s ease, transform .15s ease; }
+  .preference-toggle input, .preference-toggle input::before { transition: background-color .18s ease, transform .2s cubic-bezier(.2,.8,.2,1); }
 }
 .palette-fields { min-width: 0; margin: 0; padding: 11px; border: 1px solid var(--border); border-radius: 9px; }
 .palette-fields legend { padding: 0 5px; font-size: 13px; font-weight: 700; }
@@ -198,6 +196,41 @@ h2 { margin: 0 0 6px; font-size: clamp(25px, 3.7vw, 38px); font-weight: 780; let
 .account-dialog::backdrop { background: #0009; }
 .account-dialog h2 { font-size: 22px; }
 .account-dialog p { color: var(--muted); }
+
+/* State changes remain immediate; motion never delays saving, hiding, or focus. */
+.rail-button, .catalog-filters button, .plugin-configure, .header-menu summary,
+.header-menu__items button, .featured button, .appearance-scope span {
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.theme-selection { transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  .settings-panel { opacity: 1; transition: opacity .18s ease; }
+  .theme-card, .plugin-card {
+    opacity: 1;
+    translate: 0;
+    scale: 1;
+    transition: opacity .22s ease, translate .22s cubic-bezier(.2,.8,.2,1), scale .12s ease,
+      border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+  }
+  .theme-card:active { scale: .992; }
+  .plugin-configure svg { transition: rotate .2s ease; }
+  .plugin-configure:is(:hover,:focus-visible) svg { rotate: 30deg; }
+  .header-menu[open] .header-menu__items,
+  #plugin-settings-dialog[open], .account-dialog[open] {
+    opacity: 1;
+    translate: 0;
+    transition: opacity .16s ease, translate .2s cubic-bezier(.2,.8,.2,1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .theme-card:hover, .plugin-card:hover { translate: 0 -2px; }
+  }
+  @starting-style {
+    .settings-panel { opacity: 0; }
+    .theme-card, .plugin-card { opacity: 0; translate: 0 6px; }
+    .header-menu[open] .header-menu__items,
+    #plugin-settings-dialog[open], .account-dialog[open] { opacity: 0; translate: 0 6px; }
+  }
+}
 @media (max-width: 620px) {
   .settings-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
   .app-header { min-height: 64px; }

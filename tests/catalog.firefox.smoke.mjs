@@ -8,7 +8,8 @@ try{
  assert.equal((await d.findElement(By.id('featured')).getRect()).height,190);
  assert.equal((await d.findElements(By.css('.theme-author'))).length,11);
  assert.equal((await d.findElements(By.css('.theme-author .official-badge'))).length,10);
- await d.findElement(By.css('[data-panel=plugins]')).click();
+ const entry=await d.executeScript(`document.querySelector('[data-panel=plugins]').click();const panel=document.getElementById('plugins-panel');getComputedStyle(panel).opacity;return {reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,active:panel.getAnimations().length};`);
+ if(!entry.reduced)assert.ok(entry.active>0,'Firefox section entry transition runs');
  const search=await d.findElement(By.id('plugin-search'));await search.sendKeys('Page Navigator');
  assert.equal((await d.findElements(By.css('.plugin-card:not([hidden])'))).length,1);
  const button=await d.findElement(By.css('[data-configure-plugin=pluginQuickNavigation]'));assert.equal(await button.getText(),'');assert.ok((await button.findElements(By.css('svg'))).length===1);
@@ -17,5 +18,9 @@ try{
  assert.equal((await d.findElements(By.css('.plugin-card:not([hidden])'))).length,6);
  writeFileSync('test-results/catalog-polish-firefox.png',await d.takeScreenshot(),'base64');
  await d.manage().window().setRect({width:390,height:900});assert.equal(await d.executeScript('return document.documentElement.scrollWidth>innerWidth'),false);
+ await d.setContext(firefox.Context.CHROME);await d.executeScript("Services.prefs.setIntPref('ui.prefersReducedMotion',1);");await d.setContext(firefox.Context.CONTENT);
+ await d.wait(()=>d.executeScript("return matchMedia('(prefers-reduced-motion: reduce)').matches"),5000);
+ const reduced=await d.executeScript(`document.querySelector('[data-panel=themes]').click();const panel=document.getElementById('themes-panel');getComputedStyle(panel).opacity;return {active:panel.getAnimations().length,translate:getComputedStyle(document.querySelector('.theme-card')).translate};`);
+ assert.equal(reduced.active,0);assert.equal(reduced.translate,'none');
  console.log('PASS Firefox: compact recommendation, author names, icon-only plugin settings, plugin search/empty state and narrow layout.');
 }finally{await d.quit();}

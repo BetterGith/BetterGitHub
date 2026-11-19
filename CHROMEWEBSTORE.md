@@ -74,6 +74,8 @@ Unreleased command-hub update: a shared registry for bundled plugin commands, lo
 
 ## Review notes
 
+Catalogue motion: short entry fades for sections/cards and settings dialogs, a 2px card hover lift on precise pointers, gear feedback, and smooth switch/selection colors. Spatial animations are enabled only under `prefers-reduced-motion: no-preference`; controls, saving and hidden-state changes never wait for animation completion. No persistent effects or additional permissions.
+
 Catalogue follow-up: plugin heading controls and their SVG icons now live in static HTML, with separate settings buttons and switches. Theme author captions use a smaller regular weight. The recommendation image occupies the right 64% of the banner and crops to its height. Built options/popup pages reference CSS and scripts by deterministic content hash to avoid mixing cached assets during development. No new permissions or release version.
 
 Build with `powershell -NoProfile -File build.ps1 -Target chromium`. Package only the contents of `dist/chromium`; exclude this file, tests, dependencies, `.git` and local results. Firefox uses its own MV3 background-page declaration, not the Chromium service-worker declaration.
