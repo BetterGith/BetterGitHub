@@ -20,6 +20,11 @@ for(const width of [1825,1280,800,390]){
  if(width===1825){await p.setViewportSize({width,height:1800});await p.screenshot({path:'test-results/catalog-polish-themes.png',fullPage:true});await p.locator('#featured').screenshot({path:'test-results/catalog-fixed-featured.png'});await p.locator('.theme-card').first().screenshot({path:'test-results/catalog-fixed-theme-card.png'});}
 }
 assert.equal(await p.locator('.theme-card .theme-author').count(),11);
+assert.equal(await p.locator('.theme-author .official-badge[aria-label="Официальный автор"]').count(),10);
+assert.equal(await p.locator('.theme-card--github .official-badge').count(),0);
+for(const badge of await p.locator('.theme-author .official-badge').all()){
+ const bb=await badge.boundingBox();assert.equal(bb.width,12);assert.equal(bb.height,12);
+}
 assert.equal(await p.locator('[data-filter=all]').evaluate(el=>getComputedStyle(el).borderRadius),'6px');
 await p.setViewportSize({width:1825,height:1080});await p.locator('[data-panel=plugins]').click();
 assert.equal(await p.locator('.plugin-card:not([hidden])').count(),6);
@@ -54,7 +59,7 @@ for(const width of [2285,1825,1280,1000,800,620,560,390,320]){
 }
 await p.setViewportSize({width:1825,height:1080});await p.screenshot({path:'test-results/catalog-polish-plugins.png',fullPage:true});
 await p.setViewportSize({width:390,height:950});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await p.screenshot({path:'test-results/catalog-polish-plugins-mobile.png',fullPage:true});
-await p.locator('[data-panel=themes]').click();await p.locator('#header-menu summary').click();await p.locator('[data-panel=advanced]').click();await p.locator('[name=language]').selectOption('en');await p.locator('[data-panel=plugins]').click();assert.equal(await search.getAttribute('placeholder'),'Search plugins');await search.fill('light');assert.equal(await p.locator('.plugin-card:not([hidden])').count(),1);
+await p.locator('[data-panel=themes]').click();await p.locator('#header-menu summary').click();await p.locator('[data-panel=advanced]').click();await p.locator('[name=language]').selectOption('en');await p.locator('[data-panel=plugins]').click();assert.equal(await p.locator('.theme-author .official-badge[aria-label="Verified author"]').count(),10);assert.equal(await search.getAttribute('placeholder'),'Search plugins');await search.fill('light');assert.equal(await p.locator('.plugin-card:not([hidden])').count(),1);
 // Static headers must remain intact even if scripts have not run yet.
 const staticContext=await context.browser().newContext({javaScriptEnabled:false,viewport:{width:800,height:1000}});
 const staticPage=await staticContext.newPage();

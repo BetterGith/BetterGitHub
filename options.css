@@ -84,7 +84,8 @@ h2 { margin: 0 0 6px; font-size: clamp(25px, 3.7vw, 38px); font-weight: 780; let
 .theme-card__caption { display: grid; gap: 3px; padding: 2px 27px 3px 3px; }
 .theme-card__caption strong { font-size: 15px; line-height: 1.2; }
 .theme-card__caption small { color: var(--muted); font-size: 12px; }
-.theme-card__caption .theme-author { color: var(--muted); font-size: 11px; font-weight: 400; line-height: 1.3; }
+.theme-card__caption .theme-author { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 400; line-height: 1.3; }
+.theme-author .official-badge { flex: none; width: 12px; height: 12px; font-size: 9px; }
 .theme-card:is(:hover,:has(input:checked)),
 .plugin-card:is(:hover,:has(input[role="switch"]:checked)) { border-color: #29d98b; box-shadow: 0 0 12px #29d98b30; background: color-mix(in srgb, #29d98b 10%, var(--surface)); }
 @media (prefers-reduced-motion: no-preference) {

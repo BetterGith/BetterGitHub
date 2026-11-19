@@ -7,6 +7,7 @@ try{
  await d.get(base+'options.html');await d.wait(until.elementLocated(By.css('[data-configure-plugin=pluginQuickNavigation]')),5000);
  assert.equal((await d.findElement(By.id('featured')).getRect()).height,190);
  assert.equal((await d.findElements(By.css('.theme-author'))).length,11);
+ assert.equal((await d.findElements(By.css('.theme-author .official-badge'))).length,10);
  await d.findElement(By.css('[data-panel=plugins]')).click();
  const search=await d.findElement(By.id('plugin-search'));await search.sendKeys('Page Navigator');
  assert.equal((await d.findElements(By.css('.plugin-card:not([hidden])'))).length,1);
