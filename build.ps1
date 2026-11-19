@@ -2,6 +2,7 @@ param(
     [ValidateSet('all','chromium','firefox')][string]$Target = 'all',
     [switch]$FirefoxSelfDistributed
 )
+$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $targets = if ($Target -eq 'all') { @('chromium', 'firefox') } else { @($Target) }
 foreach ($browser in $targets) {
@@ -44,7 +45,14 @@ foreach ($browser in $targets) {
         $html = [regex]::Replace($html, '(?<attribute>href|src)="(?<asset>[a-zA-Z0-9_./-]+\.(?:css|js))"', {
             param($match)
             $asset = $match.Groups['asset'].Value
-            $revision = (Get-FileHash -LiteralPath (Join-Path $out $asset) -Algorithm SHA256).Hash.Substring(0, 12).ToLowerInvariant()
+            # Use .NET directly: command/module autoloading is unreliable inside a Regex MatchEvaluator callback.
+            $hasher = [Security.Cryptography.SHA256]::Create()
+            try {
+                $digest = $hasher.ComputeHash([IO.File]::ReadAllBytes((Join-Path $out $asset)))
+                $revision = [BitConverter]::ToString($digest).Replace('-', '').Substring(0, 12).ToLowerInvariant()
+            } finally {
+                $hasher.Dispose()
+            }
             return $match.Groups['attribute'].Value + '="' + $asset + '?v=' + $revision + '"'
         })
         [IO.File]::WriteAllText($pagePath, $html, [Text.UTF8Encoding]::new($false))
