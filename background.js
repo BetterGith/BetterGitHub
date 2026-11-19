@@ -2,6 +2,38 @@ const CONFIG_NAME = '.bettergithub.json';
 const CONFIG_FALLBACK_NAME = 'bettergithub.json';
 const MAX_CONFIG_BYTES = 64 * 1024;
 const cache = new Map();
+const extension = globalThis.browser || chrome;
+const editorDraftKey = tabId => `editorDraft:${tabId}`;
+let repositoryHistoryQueue = Promise.resolve();
+
+function historyRepository(value) {
+  if (typeof value !== 'string') return null;
+  const parts = value.split('/');
+  return parts.length === 2 && parts.every(part => /^[A-Za-z0-9_.-]{1,100}$/.test(part) && part !== '.' && part !== '..') ? parts.join('/') : null;
+}
+
+extension.tabs?.onRemoved.addListener(tabId => {
+  extension.storage.session.remove(editorDraftKey(tabId)).catch(console.warn);
+});
+
+async function openEditor(draft, senderTab) {
+  const { owner, repository, branch, filename, exists, json } = draft;
+  if (![owner, repository].every(value => typeof value === 'string' && /^[A-Za-z0-9_.-]{1,100}$/.test(value)) ||
+      typeof branch !== 'string' || !branch || ![CONFIG_NAME, CONFIG_FALLBACK_NAME].includes(filename) ||
+      typeof json !== 'string') throw new Error('Invalid editor draft');
+  const base = `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}`;
+  const ref = encodeURIComponent(branch);
+  const url = exists ? `${base}/edit/${ref}/${filename}` : `${base}/new/${ref}?filename=${encodeURIComponent(filename)}`;
+  const tab = await extension.tabs.create({ url: 'about:blank', openerTabId: senderTab.id, windowId: senderTab.windowId });
+  const key = editorDraftKey(tab.id);
+  try {
+    await extension.storage.session.set({ [key]: draft });
+    await extension.tabs.update(tab.id, { url });
+  } catch (error) {
+    await Promise.allSettled([extension.storage.session.remove(key), extension.tabs.remove(tab.id)]);
+    throw error;
+  }
+}
 
 async function githubJson(url) {
   const response = await fetch(url, {
@@ -39,19 +71,20 @@ async function rawConfig(owner, repository, ref, name) {
 async function publicBranch(owner, repository) {
   const url = `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}`;
   const response = await fetch(url, { credentials: 'omit' });
-  if (!response.ok) return null;
+  if (response.status === 404) return { missingRepository: true };
+  if (!response.ok) throw new Error(`GitHub: ${response.status}`);
   const html = await response.text();
   const match = html.match(/"defaultBranch":"([^"\\]*(?:\\.[^"\\]*)*)"/);
-  if (!match) return null;
+  if (!match) return {};
   let branch;
-  try { branch = JSON.parse(`"${match[1]}"`); } catch { return null; }
-  return typeof branch === 'string' && /^[A-Za-z0-9._/-]{1,255}$/.test(branch) && !branch.includes('..') && !branch.includes('//') && !branch.startsWith('/') && !branch.endsWith('/') ? branch : null;
+  try { branch = JSON.parse(`"${match[1]}"`); } catch { return {}; }
+  return typeof branch === 'string' && /^[A-Za-z0-9._/-]{1,255}$/.test(branch) && !branch.includes('..') && !branch.includes('//') && !branch.startsWith('/') && !branch.endsWith('/') ? { branch } : {};
 }
 
-async function defaultBranch(owner, repository) {
+async function editorRepository(owner, repository) {
   try {
     const info = await githubJson(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}`);
-    if (typeof info?.default_branch === 'string' && info.default_branch) return info.default_branch;
+    if (typeof info?.default_branch === 'string' && info.default_branch) return { branch: info.default_branch };
   } catch (error) { console.warn('BetterGitHub branch API:', error); }
   return publicBranch(owner, repository);
 }
@@ -70,7 +103,54 @@ async function loadConfig(owner, repository) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
-  if (sender.id !== chrome.runtime.id || !['bettergithub:load', 'bettergithub:editor-target', 'bettergithub:invalidate'].includes(message?.type)) return;
+  if (sender.id !== chrome.runtime.id) return;
+  if (['bettergithub:open-options', 'bettergithub:remember-repository', 'bettergithub:clear-repository-history'].includes(message?.type)) {
+    if (!Number.isInteger(sender.tab?.id) || sender.frameId !== 0) return;
+    if (message.type === 'bettergithub:open-options') {
+      Promise.resolve().then(() => extension.runtime.openOptionsPage()).then(() => respond({ ok: true }), error => respond({ error: String(error) }));
+      return true;
+    }
+    const job = repositoryHistoryQueue.catch(() => {}).then(async () => {
+      if (message.type === 'bettergithub:clear-repository-history') {
+        await extension.storage.local.set({ navigationHistory: [] });
+        return { ok: true };
+      }
+      const name = historyRepository(message.name);
+      if (!name) throw new Error('Invalid repository');
+      const data = await extension.storage.local.get(['settings', 'pluginRepositorySwitcher', 'navigationHistory']);
+      if (data.settings?.themeDisabled === true || data.pluginRepositorySwitcher !== true) return { ok: false };
+      const history = (Array.isArray(data.navigationHistory) ? data.navigationHistory : [])
+        .filter(item => historyRepository(item?.name) && item.name.toLowerCase() !== name.toLowerCase())
+        .map(item => ({ name: item.name, private: item.private === true, visitedAt: Number.isFinite(item.visitedAt) ? item.visitedAt : 0 }));
+      const next = [{ name, private: message.private === true, visitedAt: Date.now() }, ...history].slice(0, 30);
+      await extension.storage.local.set({ navigationHistory: next });
+      return { ok: true };
+    });
+    repositoryHistoryQueue = job;
+    job.then(respond, error => respond({ error: String(error) }));
+    return true;
+  }
+  if (['bettergithub:open-editor', 'bettergithub:editor-draft', 'bettergithub:update-editor-draft'].includes(message?.type)) {
+    if (!Number.isInteger(sender.tab?.id) || sender.frameId !== 0) return;
+    (async () => {
+      if (message.type === 'bettergithub:open-editor') {
+        await openEditor(message.draft, sender.tab);
+        return { ok: true };
+      }
+      const key = editorDraftKey(sender.tab.id);
+      const { [key]: draft } = await extension.storage.session.get(key);
+      if (!draft || Date.now() - draft.createdAt > 20 * 60_000) return { draft: null };
+      if (message.type === 'bettergithub:editor-draft') return { draft };
+      if (message.createdAt !== draft.createdAt) return { ok: false };
+      for (const flag of ['attempted', 'handled', 'invalidated']) {
+        if (message[flag] === true) draft[flag] = true;
+      }
+      await extension.storage.session.set({ [key]: draft });
+      return { ok: true };
+    })().then(respond, error => respond({ error: String(error) }));
+    return true;
+  }
+  if (!['bettergithub:load', 'bettergithub:editor-target', 'bettergithub:invalidate'].includes(message?.type)) return;
   const { owner, repository, kind } = message;
   if (![owner, repository].every(value => typeof value === 'string' && /^[A-Za-z0-9_.-]{1,100}$/.test(value))) {
     respond({ error: 'Invalid repository' });
@@ -83,7 +163,12 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       return;
     }
     if (message.type === 'bettergithub:editor-target') {
-      const branch = await defaultBranch(owner, repository);
+      const info = await editorRepository(owner, repository);
+      if (info.missingRepository) {
+        respond({ missingRepository: true });
+        return;
+      }
+      const { branch } = info;
       if (!branch) {
         respond({ error: 'Repository or default branch unavailable' });
         return;

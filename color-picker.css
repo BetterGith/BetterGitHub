@@ -25,11 +25,11 @@
   background: #151c2b;
   color: #f1f5ff;
   box-shadow: 0 14px 38px #000b;
-  font: 13px/1.4 Arial, sans-serif;
+  font: 13px/1.4 var(--bgh-ui-font, "SF Pro Display", system-ui, sans-serif);
 }
 .bgh-color-head { display: flex; justify-content: space-between; align-items: center; }
 .bgh-color-head strong { font-size: 14px; }
-.bgh-color-close { border: 0; background: transparent; color: inherit; font: 22px/1 Arial, sans-serif; cursor: pointer; }
+.bgh-color-close { border: 0; background: transparent; color: inherit; font: 22px/1 var(--bgh-ui-font, "SF Pro Display", system-ui, sans-serif); cursor: pointer; }
 .bgh-color-preview { height: 42px; border: 1px solid #7f8aa5; border-radius: 7px; }
 .bgh-color-hex, .bgh-color-slider { display: grid; gap: 5px; }
 .bgh-color-hex input { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #63708c; border-radius: 6px; background: #0b1020; color: #f1f5ff; font: 13px/1.3 monospace; }

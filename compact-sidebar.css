@@ -1,0 +1,26 @@
+/* Keep compact sidebar chrome stable before toolbar setup and across GitHub utility layers. */
+@layer bgh-compact-sidebar {
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) [class*="sidebarSection__"]:not(.markdown-body *) {
+  border: 0 !important;
+  margin-block: 0 !important;
+  padding-block: 4px !important;
+}
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) :is(.BorderGrid, .BorderGrid-row, .BorderGrid-cell, [data-bgh-compact-part="sidebar-section"], [data-bgh-compact-part="sidebar-row"]):not(.markdown-body *) {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) [data-bgh-compact-part="sidebar-section"] {
+  margin-block: 0 !important;
+  padding-block: 4px !important;
+}
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) [data-bgh-compact-part="sidebar-row"] { margin-block: 0 !important; padding-block: 0 !important; }
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) :is(.BorderGrid-row, .BorderGrid-cell, [data-bgh-compact-part="sidebar-section"], [data-bgh-compact-part="sidebar-row"]):not(.markdown-body *)::before,
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) :is(.BorderGrid-row, .BorderGrid-cell, [data-bgh-compact-part="sidebar-section"], [data-bgh-compact-part="sidebar-row"]):not(.markdown-body *)::after { border: 0 !important; box-shadow: none !important; }
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) [data-bgh-compact-part="empty-description"] { display: none !important; }
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) [data-bgh-compact-part="about-heading"] { display: flex; align-items: center; gap: 8px; }
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) .BorderGrid-row > .BorderGrid-cell:not(.markdown-body *) {
+  border: 0 !important;
+  padding-block: 4px !important;
+}
+:root:is([data-bgh-theme="compact"], [data-bgh-theme="compact-light"]) [class*="sidebarSection__"] [class*="noDescription__"] { display: none !important; }
+}

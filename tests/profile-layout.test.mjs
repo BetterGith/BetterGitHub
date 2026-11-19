@@ -10,11 +10,13 @@ const script = readFileSync(new URL('../content.js', import.meta.url), 'utf8');
 function fixture({ readme = true, pinned = true, contributions = true, highlights = true, repoMeta = false } = {}) {
   return `<!doctype html><html><head>${repoMeta ? '<meta name="octolytics-dimension-repository_nwo" content="Example/Example">' : ''}</head><body><main><div class="Layout">
     <aside class="Layout-sidebar"><div class="js-profile-editable-replace">
-      <div class="vcard-names"><h1>Example</h1></div>
-      <div id="profile-info" class="d-flex flex-column"><div class="js-profile-editable-area"><a href="/Example?tab=followers">Followers</a><a href="https://example.com">Website</a></div></div>
+      <div id="github-profile-identity"><img class="avatar-user" alt=""><h1 class="vcard-names">Example</h1></div>
+      <div class="d-flex flex-column">
+        <div id="github-profile-action"><button type="button" class="js-profile-editable-edit-button">Edit profile</button></div>
+        <div id="profile-info" class="js-profile-editable-area"><a href="/Example?tab=followers">Followers</a><a href="https://example.com">Website</a></div>
+      </div>
       <div id="profile-achievements" class="border-top color-border-muted tmp-pt-3 tmp-mt-3 d-none d-md-block"><h2>Achievements</h2><a href="/achievements">Badge</a></div>
       ${highlights ? '<div id="profile-highlights" class="border-top color-border-muted tmp-pt-3 tmp-mt-3 d-none d-md-block"><h2>Highlights</h2><a href="/highlights">Developer Program Member</a></div>' : ''}
-      <div id="github-profile-action"><a href="/settings/profile">Edit profile</a></div>
     </div></aside>
     <div class="Layout-main"><turbo-frame id="user-profile-frame"><div class="position-relative">
       ${readme ? '<div id="profile-readme" class="Box tmp-mt-4 profile-readme"><a href="/Example/Example/blob/main/README.md">Example/README.md</a><article class="markdown-body">Readme</article></div>' : ''}
@@ -34,7 +36,9 @@ async function profile(config = {}, { settings = { mode: 'site', theme: 'github'
   window.chrome = {
     storage: {
       local: { get: (_, callback) => callback({ settings }), set: (_, callback) => callback() },
-      onChanged: { addListener() {} }
+      onChanged: { addListener(callback) {
+        window.updateBetterGitHubSettings = value => callback({ settings: { newValue: value } }, 'local');
+      } }
     },
     runtime: { sendMessage: (_, callback) => callback({ config, assetBase: 'https://raw.githubusercontent.com/Example/Example/main/.bettergithub.json' }) }
   };
@@ -47,6 +51,83 @@ function siblingIds(parent, prefix) {
   return [...parent.children].map(child => child.id).filter(id => id.startsWith(prefix));
 }
 
+test('Compact UI covers profiles in both modes without moving native blocks or editing the README', async () => {
+  const settings = { mode: 'global', theme: 'compact', global: {}, sites: {} };
+  const dom = await profile({}, { settings });
+  const { document, updateBetterGitHubSettings } = dom.window;
+  const main = document.querySelector('#user-profile-frame > .position-relative');
+  const readme = document.querySelector('.markdown-body').outerHTML;
+  const order = siblingIds(main, 'profile-');
+  const infoParent = document.getElementById('profile-info').parentElement;
+  const editButton = document.querySelector('.js-profile-editable-edit-button');
+  const editMarkup = editButton.outerHTML;
+  for (const theme of ['compact', 'compact-light', 'compact']) {
+    updateBetterGitHubSettings({ ...settings, theme });
+    assert.equal(document.documentElement.dataset.bghCompactProfile, 'yes');
+    assert.ok(document.querySelector('[data-bgh-compact-part="profile-layout"]'));
+    assert.equal(document.querySelector('.markdown-body').outerHTML, readme);
+    assert.deepEqual(siblingIds(main, 'profile-'), order);
+    assert.equal(document.getElementById('profile-info').parentElement, infoParent);
+    assert.equal(editButton.outerHTML, editMarkup);
+  }
+  updateBetterGitHubSettings({ ...settings, theme: 'github' });
+  assert.equal(document.documentElement.hasAttribute('data-bgh-compact-profile'), false);
+  assert.equal(document.querySelectorAll('[data-bgh-compact-part]').length, 0);
+  updateBetterGitHubSettings(settings);
+  updateBetterGitHubSettings({ ...settings, themeDisabled: true });
+  assert.equal(document.documentElement.hasAttribute('data-bgh-compact-profile'), false);
+  assert.equal(document.querySelectorAll('[data-bgh-compact-part]').length, 0);
+  assert.equal(document.querySelector('.markdown-body').outerHTML, readme);
+  dom.window.close();
+});
+
+test('pausing restores original profile blocks and removes the editor and decorations', async () => {
+  const dom = await profile({ banner: 'banner.png', layout: {
+    profile: ['pinned', 'readme', 'contributions'],
+    profileSidebar: ['highlights', 'achievements', 'info']
+  } });
+  const { document, updateBetterGitHubSettings } = dom.window;
+  const original = new JSDOM(fixture()).window.document;
+  document.getElementById('bgh-gear').click();
+  updateBetterGitHubSettings({ mode: 'site', theme: 'github', sites: {}, themeDisabled: true });
+  for (const id of ['profile-info', 'profile-readme', 'profile-pinned', 'profile-contributions', 'profile-achievements', 'profile-highlights']) {
+    const node = document.getElementById(id);
+    const expected = original.getElementById(id);
+    assert.equal(node.parentElement.className, expected.parentElement.className, id);
+    assert.equal(node.previousElementSibling?.id, expected.previousElementSibling?.id, id);
+  }
+  assert.equal(document.querySelector('[id^="bgh-"], .bgh-layout-handle, .bgh-reordered'), null);
+  assert.equal(document.documentElement.hasAttribute('data-bgh'), false);
+  dom.window.close();
+});
+
+test('profile previews background and banner from profile-repository shorthand and restores saved images on close', async () => {
+  const dom = await profile({ appearance: { theme: 'forest', background: 'saved.png' }, banner: 'saved-banner.png' });
+  const { window } = dom;
+  const { document } = window;
+  const base = 'https://raw.githubusercontent.com/Example/Example/main/';
+  const background = () => document.documentElement.style.getPropertyValue('--bgh-background-image');
+  const banner = () => document.querySelector('#bgh-profile-banner img')?.src;
+  const type = (input, value) => {
+    input.value = value;
+    input.dispatchEvent(new window.Event('input', { bubbles: true }));
+  };
+  document.getElementById('bgh-gear').click();
+  const form = document.getElementById('bgh-form');
+  type(form.elements.background, 'Example/image.png');
+  type(form.elements.banner, 'Example/image.png');
+  assert.equal(background(), `url("${base}image.png")`);
+  assert.equal(banner(), base + 'image.png');
+  type(form.elements.banner, './Example/image.png');
+  assert.equal(banner(), base + 'Example/image.png');
+  type(form.elements.banner, '');
+  assert.equal(banner(), undefined);
+  document.getElementById('bgh-close').click();
+  assert.equal(background(), `url("${base}saved.png")`);
+  assert.equal(banner(), base + 'saved-banner.png');
+  dom.window.close();
+});
+
 test('published profile JSON reorders both columns by moving original siblings', async () => {
   const dom = await profile({ layout: {
     profile: ['pinned', 'readme', 'contributions'],
@@ -58,6 +139,8 @@ test('published profile JSON reorders both columns by moving original siblings',
   const nodes = Object.fromEntries(['profile-readme', 'profile-pinned', 'profile-contributions', 'profile-info', 'profile-achievements', 'profile-highlights'].map(id => [id, doc.getElementById(id)]));
   assert.deepEqual(siblingIds(right, 'profile-'), ['profile-pinned', 'profile-readme', 'profile-contributions']);
   assert.deepEqual(siblingIds(left, 'profile-'), ['profile-highlights', 'profile-achievements', 'profile-info']);
+  assert.equal(left.firstElementChild.id, 'github-profile-identity');
+  assert.equal(left.children[1].firstElementChild.id, 'github-profile-action');
   for (const [id, node] of Object.entries(nodes)) assert.equal(doc.getElementById(id), node);
   assert.equal(doc.querySelector('#profile-pinned .pinned-item-list-item a')?.getAttribute('href'), '/Example/Project');
   dom.window.close();
@@ -79,7 +162,11 @@ test('six-dot handles appear only after BetterGitHub layout editing starts and k
   }
   doc.querySelector('#profile-pinned a').click();
   assert.equal(nativeClicks, 1);
-  assert.equal(doc.querySelector('#github-profile-action a')?.getAttribute('href'), '/settings/profile');
+  const edit = doc.querySelector('#github-profile-action button');
+  assert.equal(edit?.textContent, 'Edit profile');
+  assert.equal(edit.nextElementSibling?.id, 'bgh-gear');
+  assert.equal(doc.querySelector('[data-bgh-drag-handle="info"]').parentElement.id, 'profile-info');
+  assert.equal(doc.querySelector('#github-profile-identity [data-bgh-drag-handle]'), null);
   doc.getElementById('bgh-layout-cancel').click();
   assert.equal(doc.querySelectorAll('[data-bgh-drag-handle]').length, 0);
   assert.equal(doc.querySelector('#bgh-edit-layout').hidden, false);
@@ -172,28 +259,21 @@ test('profile editor opens with no README and ignores repository metadata on a p
   dom.window.close();
 });
 
-test('profile GitHub handoff preserves repository settings in the existing config', async () => {
+async function stageProfile(previous) {
   const dom = await profile();
   const { window } = dom;
   const doc = window.document;
-  const repositoryConfig = {
-    appearance: { theme: 'midnight', accent: '#123456' },
-    layout: { sidebar: ['packages', 'about'] },
-    banner: 'assets/repository-banner.png',
-    customField: { keep: true }
-  };
   let draft;
-  let opened;
-  window.open = () => (opened = { closed: false, location: { href: 'about:blank' } });
-  window.chrome.storage.local.set = (value, callback) => {
-    if (value.githubDraft) draft = value.githubDraft;
-    callback();
-  };
   window.chrome.runtime.sendMessage = (message, callback) => {
+    if (message.type === 'bettergithub:open-editor') {
+      draft = message.draft;
+      callback({ ok: true });
+      return;
+    }
     assert.deepEqual(JSON.parse(JSON.stringify(message)), {
       type: 'bettergithub:editor-target', owner: 'Example', repository: 'Example'
     });
-    callback({ branch: 'main', filename: 'bettergithub.json', exists: true, config: repositoryConfig });
+    callback({ branch: 'main', filename: 'bettergithub.json', exists: true, config: previous });
   };
   doc.getElementById('bgh-gear').click();
   const form = doc.getElementById('bgh-form');
@@ -201,8 +281,23 @@ test('profile GitHub handoff preserves repository settings in the existing confi
   form.elements.theme.dispatchEvent(new window.Event('change', { bubbles: true }));
   doc.getElementById('bgh-github-save').click();
   await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(opened.location.href, 'https://github.com/Example/Example/edit/main/bettergithub.json');
-  const staged = JSON.parse(draft.json);
+  dom.window.close();
+  assert.equal(draft.filename, 'bettergithub.json');
+  return JSON.parse(draft.json);
+}
+
+test('profile GitHub handoff preserves separate repository settings and clears old profile fields', async () => {
+  const repositoryConfig = {
+    appearance: { theme: 'midnight', accent: '#123456' },
+    layout: { sidebar: ['packages', 'about'] },
+    banner: 'assets/repository-banner.png',
+    customField: { keep: true }
+  };
+  const staged = await stageProfile({
+    ...repositoryConfig,
+    layout: { ...repositoryConfig.layout, profile: ['pinned'], profileSidebar: ['info'] },
+    profile: { banner: 'outdated.png' }
+  });
   for (const [key, value] of Object.entries(repositoryConfig)) {
     assert.deepEqual(staged[key], value, `repository field ${key} changed`);
   }
@@ -210,7 +305,20 @@ test('profile GitHub handoff preserves repository settings in the existing confi
   assert.deepEqual(staged.profile.layout.profile, ['readme', 'pinned', 'contributions']);
   assert.deepEqual(staged.profile.layout.profileSidebar, ['info', 'achievements', 'highlights']);
   assert.equal(staged.profile.layout.sidebar, undefined);
-  dom.window.close();
+  assert.equal(staged.profile.banner, undefined);
+});
+
+test('profile GitHub handoff replaces the legacy root profile shown in the editor', async () => {
+  const staged = await stageProfile({
+    appearance: { theme: 'universe-dark' },
+    layout: { profile: ['readme', 'pinned'], profileSidebar: ['info'] },
+    banner: 'legacy-banner.png',
+    icon: 'legacy-icon.png',
+    profile: { appearance: { theme: 'forest' } }
+  });
+  assert.deepEqual(Object.keys(staged), ['profile']);
+  assert.equal(staged.profile.appearance.theme, 'amethyst');
+  assert.deepEqual(staged.profile.layout.profile, ['readme', 'pinned', 'contributions']);
 });
 
 test('profile editor adds handles when README and Pinned hydrate after opening', async () => {
@@ -235,13 +343,27 @@ test('saved profile theme applies locally and survives a fresh page', async () =
   const form = doc.getElementById('bgh-form');
   form.elements.theme.value = 'amethyst';
   form.elements.theme.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  form.elements.background.value = 'blob/main/изображение.png';
+  form.elements.backgroundDim.value = '12';
+  form.elements.backgroundPosition.value = 'bottom';
+  form.elements.effectStrength.value = '80';
+  form.elements.effect.value = 'glow';
+  form.elements.effect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.equal(doc.documentElement.dataset.bghEffect, 'glow');
+  assert.equal(doc.documentElement.style.getPropertyValue('--bgh-background-dim'), '12%');
   form.requestSubmit();
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(doc.documentElement.dataset.bghTheme, 'amethyst');
   assert.equal(saved.sites['profile:example/example'].appearance.theme, 'amethyst');
   dom.window.close();
   const fresh = await profile({}, { settings: saved });
-  assert.equal(fresh.window.document.documentElement.dataset.bghTheme, 'amethyst');
+  const root = fresh.window.document.documentElement;
+  assert.equal(root.dataset.bghTheme, 'amethyst');
+  assert.equal(root.dataset.bghEffect, 'glow');
+  assert.equal(root.style.getPropertyValue('--bgh-background-position'), 'bottom');
+  assert.equal(root.style.getPropertyValue('--bgh-effect-strength'), '80%');
+  assert.equal(root.style.getPropertyValue('--bgh-background-image'),
+    'url("https://raw.githubusercontent.com/Example/Example/main/' + encodeURIComponent('изображение.png') + '")');
   fresh.window.close();
 });
 

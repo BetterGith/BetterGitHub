@@ -1,0 +1,63 @@
+{
+  "source": "https://github.com/YarilaFox/figcraft",
+  "capturedAt": "2026-11-19T00:41:52.882Z",
+  "width": 1440,
+  "height": 810,
+  "results": [
+    {
+      "theme": "compact",
+      "file": "compact.png",
+      "bytes": 132915
+    },
+    {
+      "theme": "compact-light",
+      "file": "compact-light.png",
+      "bytes": 133148
+    },
+    {
+      "theme": "universe",
+      "file": "universe.png",
+      "bytes": 160938
+    },
+    {
+      "theme": "universe-dark",
+      "file": "universe-dark.png",
+      "bytes": 160924
+    },
+    {
+      "theme": "github",
+      "file": "github.png",
+      "bytes": 102890
+    },
+    {
+      "theme": "rounded",
+      "file": "rounded.png",
+      "bytes": 167542
+    },
+    {
+      "theme": "rounded-light",
+      "file": "rounded-light.png",
+      "bytes": 166399
+    },
+    {
+      "theme": "midnight",
+      "file": "midnight.png",
+      "bytes": 162358
+    },
+    {
+      "theme": "amethyst",
+      "file": "amethyst.png",
+      "bytes": 162010
+    },
+    {
+      "theme": "forest",
+      "file": "forest.png",
+      "bytes": 162317
+    },
+    {
+      "theme": "light",
+      "file": "light.png",
+      "bytes": 162077
+    }
+  ]
+}

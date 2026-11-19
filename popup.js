@@ -7,24 +7,24 @@
   const strings = {
     ru: {
       store: 'Магазин BetterGitHub', catalog: 'Темы и плагины', theme: 'Тема',
-      off: 'Выключить тему', advanced: 'Дополнительно',
-      themes: { light: 'Светлая', midnight: 'Полночь', github: 'GitHub', universe: 'Universe · светлая', 'universe-dark': 'Universe · тёмная', amethyst: 'Аметист', forest: 'Лес' },
+      off: 'Выключить BetterGitHub', advanced: 'Дополнительно',
+      themes: { compact: 'Compact UI', 'compact-light': 'Compact UI', 'rounded-light': 'Округлая светлая', rounded: 'Округлая', light: 'Светлая', midnight: 'Полночь', github: 'GitHub', universe: 'Universe · светлая', 'universe-dark': 'Universe · тёмная', amethyst: 'Аметист', forest: 'Лес' },
       scope: 'Оформление страниц', global: 'Моя тема везде', site: 'Тема автора страницы',
-      plugins: 'Плагины', noPlugins: 'Плагинов пока нет.',
+      plugins: 'Плагины', managePlugins: 'Управление плагинами',
       siteHint: 'Если автор не задал тему, используется оформление GitHub.',
       globalHint: 'Выбранная тема применяется ко всем страницам GitHub.',
-      offHint: 'Оформление BetterGitHub выключено.',
+      offHint: 'BetterGitHub полностью выключен на GitHub.',
       failed: 'Не удалось сохранить настройки.',
     },
     en: {
       store: 'BetterGitHub Store', catalog: 'Themes and plugins', theme: 'Theme',
-      off: 'Turn theme off', advanced: 'Advanced',
-      themes: { light: 'Light', midnight: 'Midnight', github: 'GitHub', universe: 'Universe · light', 'universe-dark': 'Universe · dark', amethyst: 'Amethyst', forest: 'Forest' },
+      off: 'Turn BetterGitHub off', advanced: 'Advanced',
+      themes: { compact: 'Compact UI', 'compact-light': 'Compact UI', 'rounded-light': 'Rounded light', rounded: 'Rounded', light: 'Light', midnight: 'Midnight', github: 'GitHub', universe: 'Universe · light', 'universe-dark': 'Universe · dark', amethyst: 'Amethyst', forest: 'Forest' },
       scope: 'Page appearance', global: 'My theme everywhere', site: 'Page author’s theme',
-      plugins: 'Plugins', noPlugins: 'No plugins yet.',
+      plugins: 'Plugins', managePlugins: 'Manage plugins',
       siteHint: 'Pages without an author theme use GitHub’s appearance.',
       globalHint: 'The selected theme applies to every GitHub page.',
-      offHint: 'BetterGitHub theming is off.',
+      offHint: 'BetterGitHub is completely off on GitHub.',
       failed: 'Could not save settings.',
     },
   };
@@ -47,6 +47,7 @@
       const theme = recent[index];
       card.querySelector('input').value = theme;
       card.querySelector('.theme-preview').dataset.previewTheme = theme;
+      card.querySelector('.theme-preview img').src = `previews/${theme}.png`;
       card.querySelector('.choice-name').textContent = labels.themes[theme];
     });
     for (const input of quickThemes.querySelectorAll('input')) input.checked = input.value === selected;

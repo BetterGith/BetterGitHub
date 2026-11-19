@@ -18,7 +18,8 @@ foreach ($browser in $targets) {
     } else {
         Copy-Item -LiteralPath $sourceManifest -Destination $builtManifest
     }
-    foreach ($file in @('background.js', 'content.js', 'content.css', 'color-picker.js', 'color-picker.css', 'options.html', 'options.js', 'options.css', 'popup.html', 'popup.css', 'popup.js')) {
+    Copy-Item -LiteralPath (Join-Path $root '_locales') -Destination $out -Recurse -Force -ErrorAction Stop
+    foreach ($file in @('background.js', 'content.js', 'navigation.js', 'navigation.css', 'ui-font.css', 'content.css', 'compact-sidebar.css', 'color-picker.js', 'color-picker.css', 'options.html', 'options.js', 'options.css', 'popup.html', 'popup.css', 'popup.js')) {
         Copy-Item -LiteralPath (Join-Path $root $file) -Destination (Join-Path $out $file)
     }
     $iconsOut = Join-Path $out 'icons'
@@ -30,6 +31,11 @@ foreach ($browser in $targets) {
     New-Item -ItemType Directory -Force -Path $fontsOut | Out-Null
     Get-ChildItem -LiteralPath (Join-Path $root 'fonts') -File | ForEach-Object {
         Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $fontsOut $_.Name)
+    }
+    $previewsOut = Join-Path $out 'previews'
+    New-Item -ItemType Directory -Force -Path $previewsOut | Out-Null
+    Get-ChildItem -LiteralPath (Join-Path $root 'previews') -Filter '*.png' -File | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $previewsOut $_.Name)
     }
     Write-Output $out
 }

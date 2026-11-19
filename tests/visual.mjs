@@ -4,10 +4,9 @@ import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const output = process.argv[2] || resolve(root, 'universe-visual-check.png');
-const font = name => readFileSync(resolve(root, 'fonts', name)).toString('base64');
-const css = readFileSync(resolve(root, 'content.css'), 'utf8')
-  .replace('url("fonts/MonaSansVF-opsz-wght.woff2")', `url("data:font/woff2;base64,${font('MonaSansVF-opsz-wght.woff2')}")`)
-  .replace('url("fonts/MonaSansMonoVF-wght.woff2")', `url("data:font/woff2;base64,${font('MonaSansMonoVF-wght.woff2')}")`);
+const fonts = Object.fromEntries(['MonaSansVF-opsz-wght.woff2', 'MonaSansMonoVF-wght.woff2'].map(name =>
+  [`fonts/${name}`, `data:font/woff2;base64,${readFileSync(resolve(root, 'fonts', name)).toString('base64')}`]));
+const css = ['ui-font.css', 'content.css', 'compact-sidebar.css'].map(file => readFileSync(resolve(root, file), 'utf8')).join('\n');
 const script = readFileSync(resolve(root, 'content.js'), 'utf8');
 const browser = await chromium.launch({ executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', headless: true });
 try {
@@ -16,21 +15,21 @@ try {
   await page.goto('https://github.com/YarilaFox/CultOfTheLambTalk', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-testid="repo-name-wrapper"]');
   await page.waitForFunction(() => [...document.querySelectorAll('nav a[data-tab-item]')].some(link => getComputedStyle(link).visibility === 'visible'), undefined, { timeout: 10000 });
-  await page.evaluate(() => {
+  await page.evaluate(fontURLs => {
     window.chrome = {
       storage: {
         local: { get: (_, callback) => callback({ settings: { mode: 'global', theme: 'universe', global: {}, sites: {} } }), set: (_, callback) => callback() },
         onChanged: { addListener() {} }
       },
-      runtime: { sendMessage: (_, callback) => callback({ config: null, assetBase: null }) }
+      runtime: { getURL: path => fontURLs[path], sendMessage: (_, callback) => callback({ config: null, assetBase: null }) }
     };
-  });
+  }, fonts);
   await page.addStyleTag({ content: css });
   await page.evaluate(script);
   await page.locator('[class*="borderGrid__"]').first().waitFor();
   await page.locator('a[aria-label^=".github/workflows"]').first().waitFor({ state: 'attached', timeout: 15000 });
   await page.waitForTimeout(1000);
-  await page.evaluate(() => document.fonts.ready);
+  await page.waitForFunction(() => [...document.fonts].some(font => font.family === 'Better Mona Sans' && font.status === 'loaded'));
   const sidebar = page.locator('[class*="borderGrid__"]').first();
   const box = await sidebar.boundingBox();
   await page.mouse.move(box.x + box.width * .5, box.y + Math.min(120, box.height * .4));

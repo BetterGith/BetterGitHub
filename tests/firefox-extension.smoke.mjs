@@ -84,10 +84,12 @@ try {
   assert.equal(await driver.findElement(By.id('plugins-panel')).isDisplayed(), true);
   await driver.findElement(By.css('[data-panel="themes"]')).click();
   await driver.findElement(By.css('[data-filter="light"]')).click();
-  assert.equal(await driver.findElement(By.id('theme-count')).getText(), '2');
+  assert.equal(await driver.findElement(By.id('theme-count')).getText(), '4');
   assert.equal(await driver.findElement(By.id('featured')).isDisplayed(), false);
   await driver.findElement(By.css('#theme-sort option[value="name"]')).click();
-  assert.equal(await driver.findElement(By.css('.theme-card:not([hidden]) strong')).getText(), 'Светлая');
+  const sortedNames = await driver.findElements(By.css('.theme-card:not([hidden]) strong'));
+  const names = await Promise.all(sortedNames.map(node => node.getText()));
+  assert.deepEqual(names, [...names].sort((a, b) => a.localeCompare(b, 'ru')));
   await driver.findElement(By.css('#theme-sort option[value="default"]')).click();
   await driver.findElement(By.css('[data-filter="all"]')).click();
   await driver.findElement(By.css('#header-menu summary')).click();
@@ -96,26 +98,27 @@ try {
   await driver.findElement(By.css('#account-dialog button')).click();
   await driver.findElement(By.id('choose-featured')).click();
   assert.equal(await driver.findElement(By.css('input[value="universe-dark"]')).isSelected(), true);
+  await driver.wait(until.elementTextIs(driver.findElement(By.id('status')), 'Настройки сохранены'), 5000);
   await driver.navigate().refresh();
-  await driver.wait(async () => driver.findElement(By.css('input[value="midnight"]')).isSelected(), 5000);
+  await driver.wait(async () => driver.findElement(By.css('input[value="universe-dark"]')).isSelected(), 5000);
   writeFileSync(resolve(root, 'test-results/firefox-store.png'), await driver.takeScreenshot(), 'base64');
   await driver.findElement(By.css('.theme-card--forest')).click();
-  await driver.findElement(By.css('.save-button')).click();
+  assert.equal((await driver.findElements(By.css('#settings button[type="submit"]'))).length, 0);
   await driver.wait(until.elementTextIs(driver.findElement(By.id('status')), 'Настройки сохранены'), 5000);
   await driver.navigate().refresh();
   await driver.wait(async () => driver.findElement(By.css('input[value="forest"]')).isSelected(), 5000);
   await driver.get(url);
   await driver.wait(until.elementIsEnabled(driver.findElement(By.id('quick-themes'))), 5000);
   const recent = () => driver.executeScript("return [...document.querySelectorAll('.recent-theme input')].map(input => input.value)");
-  assert.deepEqual(await recent(), ['forest', 'midnight']);
+  assert.deepEqual(await recent(), ['forest', 'universe-dark']);
   await driver.findElement(By.css('.off-preview')).click();
-  await driver.wait(until.elementTextIs(driver.findElement(By.id('popup-status')), 'Оформление BetterGitHub выключено.'), 5000);
+  await driver.wait(until.elementTextIs(driver.findElement(By.id('popup-status')), 'BetterGitHub полностью выключен на GitHub.'), 5000);
   await driver.navigate().refresh();
   await driver.wait(async () => driver.findElement(By.css('input[value="off"]')).isSelected(), 5000);
-  assert.deepEqual(await recent(), ['forest', 'midnight']);
-  await driver.findElement(By.css('[data-preview-theme="midnight"]')).click();
-  await driver.wait(async () => (await currentAppearance()).join('/') === 'global/midnight', 5000);
-  await driver.wait(async () => (await recent()).join('/') === 'midnight/forest', 5000);
+  assert.deepEqual(await recent(), ['forest', 'universe-dark']);
+  await driver.findElement(By.css('[data-preview-theme="universe-dark"]')).click();
+  await driver.wait(async () => (await currentAppearance()).join('/') === 'global/universe-dark', 5000);
+  await driver.wait(async () => (await recent()).join('/') === 'universe-dark/forest', 5000);
   assert.equal(await driver.findElement(By.css('input[value="off"]')).isSelected(), false);
   await driver.executeAsyncScript("chrome.storage.local.set({settings:{mode:'global',theme:'github',language:'ru',global:{},sites:{}}},arguments[arguments.length-1])");
   await driver.manage().window().setRect({ width: 1750, height: 1050 });
@@ -158,15 +161,17 @@ try {
   await driver.findElement(By.css('#bgh-form button[type="submit"]')).click();
   await driver.wait(async () => (await driver.findElements(By.css('#bgh-dialog[open]'))).length === 0, 5000);
   await driver.get('https://github.com/YarilaFox');
-  await driver.wait(until.elementLocated(By.css('.vcard-names #bgh-gear')), 20000);
+  await driver.wait(async () => driver.executeScript("return [...document.fonts].some(font => font.family === 'Better Mona Sans' && font.status === 'loaded')"), 10000);
+  await driver.wait(until.elementLocated(By.css('#bgh-gear[data-bgh-placement=profile-action]')), 20000);
   await driver.wait(async () => {
     try {
-      await driver.findElement(By.css('.vcard-names #bgh-gear')).click();
+      await driver.findElement(By.css('#bgh-gear[data-bgh-placement=profile-action]')).click();
       return (await driver.findElements(By.css('#bgh-dialog[open]'))).length > 0;
     } catch (error) { if (['StaleElementReferenceError', 'NoSuchElementError'].includes(error.name)) return false; throw error; }
   }, 10000);
   assert.ok((await driver.findElements(By.css('.bgh-layout-handle'))).length >= 3);
-  assert.ok(await driver.executeScript("const n=document.querySelector('.vcard-names'),b=document.getElementById('bgh-gear');return Math.abs(n.getBoundingClientRect().left-b.getBoundingClientRect().left)<2"), 'Profile editor button should align with the profile name');
+  assert.ok(await driver.executeScript("return document.getElementById('bgh-gear').previousElementSibling.matches('.user-following-container')"), 'Profile editor button should follow the native Follow control');
+  assert.ok(await driver.executeScript("return !document.querySelector('[data-bgh-drag-handle=info]').parentElement.querySelector('.vcard-names, .avatar-user')"), 'About should be separate from the profile identity');
   writeFileSync(resolve(root, 'test-results/firefox-profile-editor.png'), await driver.takeScreenshot(), 'base64');
   console.log(JSON.stringify({ popup: rect, savedTheme: 'forest', screenshot: 'test-results/firefox-popup.png' }));
 } catch (error) {

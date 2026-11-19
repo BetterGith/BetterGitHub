@@ -9,5 +9,6 @@ for (const browser of ['chromium', 'firefox']) {
     assert.deepEqual(manifest.options_ui, { page: 'options.html', open_in_tab: true });
     assert.match(readFileSync(new URL('../popup.html', import.meta.url), 'utf8'), /id="open-store" href="options.html" target="_blank"/);
     assert.match(readFileSync(new URL('../options.html', import.meta.url), 'utf8'), /id="theme-gallery"/);
+    assert.match(readFileSync(new URL('../popup.html', import.meta.url), 'utf8'), /id="open-plugins" class="plugins-link" href="options.html#plugins" target="_blank"/);
   });
 }

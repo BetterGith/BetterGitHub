@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BetterGitHub</title>
+  <link rel="stylesheet" href="ui-font.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -26,12 +27,12 @@
       <fieldset id="quick-themes" aria-labelledby="theme-title" disabled>
         <label class="theme-choice recent-theme">
           <input type="radio" name="quick-theme" value="light">
-          <span class="theme-preview" data-preview-theme="light" aria-hidden="true"><i></i></span>
+          <span class="theme-preview" data-preview-theme="light" aria-hidden="true"><img src="previews/light.png" width="1440" height="810" alt="" decoding="async"></span>
           <span class="choice-name">Светлая</span>
         </label>
         <label class="theme-choice recent-theme">
           <input type="radio" name="quick-theme" value="midnight">
-          <span class="theme-preview" data-preview-theme="midnight" aria-hidden="true"><i></i></span>
+          <span class="theme-preview" data-preview-theme="midnight" aria-hidden="true"><img src="previews/midnight.png" width="1440" height="810" alt="" decoding="async"></span>
           <span class="choice-name">Полночь</span>
         </label>
         <label class="theme-choice">
@@ -39,7 +40,7 @@
           <span class="theme-preview off-preview" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M12 3v8m5-5a8 8 0 1 1-10 0"/></svg>
           </span>
-          <span class="choice-name" data-text="off">Выключить тему</span>
+          <span class="choice-name" data-text="off">Выключить BetterGitHub</span>
         </label>
       </fieldset>
     </section>
@@ -58,8 +59,11 @@
       <p id="popup-status" role="status"></p>
     </section>
     <section class="plugins-section" aria-labelledby="plugins-title">
-      <h2 id="plugins-title" data-text="plugins">Плагины</h2>
-      <p data-text="noPlugins">Плагинов пока нет.</p>
+      <a id="open-plugins" class="plugins-link" href="options.html#plugins" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5m8-5v5M5 8h14v3a7 7 0 0 1-7 7v3m0-3a7 7 0 0 1-7-7Z"/></svg>
+        <span><strong id="plugins-title" data-text="plugins">Плагины</strong><small data-text="managePlugins">Управление плагинами</small></span>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg>
+      </a>
     </section>
   </main>
   <script src="popup.js"></script>

@@ -25,6 +25,7 @@ try {
   });
   await page.evaluate(readFileSync(resolve(root, 'color-picker.js'), 'utf8'));
   await page.addStyleTag({ content: readFileSync(resolve(root, 'content.css'), 'utf8') });
+  await page.addStyleTag({ content: readFileSync(resolve(root, 'compact-sidebar.css'), 'utf8') });
   await page.addStyleTag({ content: readFileSync(resolve(root, 'color-picker.css'), 'utf8') });
   await page.evaluate(readFileSync(resolve(root, 'content.js'), 'utf8'));
   await page.locator('#bgh-gear').waitFor();

@@ -1,0 +1,29 @@
+#bgh-tools-launchers { display: inline-flex; align-items: center; flex: none; gap: 4px; margin-inline-start: 8px; }
+.bgh-tool-launcher { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 1px solid var(--borderColor-default, #3d444d); border-radius: 6px; background: var(--button-default-bgColor-rest, #212830); color: var(--fgColor-default, #f0f6fc); cursor: pointer; vertical-align: middle; }
+.bgh-tool-launcher svg { fill: none; stroke: currentColor; stroke-width: 1.5; }
+.bgh-tool-launcher:hover { background: var(--button-default-bgColor-hover, #2a313c); }
+#bgh-tools-launchers.bgh-tools-floating { position: fixed; right: 16px; bottom: 16px; z-index: 100; }
+#bgh-tools-dialog { box-sizing: border-box; width: min(620px, calc(100vw - 24px)); max-height: min(680px, calc(100dvh - 48px)); padding: 0; margin: max(24px, 12vh) auto auto; border: 1px solid var(--borderColor-default, #3d444d); border-radius: 12px; background: var(--bgColor-default, #0d1117); color: var(--fgColor-default, #f0f6fc); box-shadow: 0 20px 70px #0005; font: 14px/1.4 var(--bgh-ui-font, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif); overflow: hidden; }
+#bgh-tools-dialog[open] { display: flex; flex-direction: column; }
+#bgh-tools-dialog:modal { overscroll-behavior: contain; }
+#bgh-tools-dialog::backdrop { background: #0006; overflow: hidden; overscroll-behavior: contain; }
+#bgh-tools-dialog * { box-sizing: border-box; }
+#bgh-tools-dialog header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 6px; }
+#bgh-tools-dialog h2 { margin: 0; font-size: 16px; font-weight: 600; }
+#bgh-tools-dialog button { font: inherit; color: inherit; cursor: pointer; }
+#bgh-tools-close { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 5px; background: transparent; font-size: 22px !important; }
+#bgh-tools-dialog input[role="combobox"] { flex: none; width: calc(100% - 24px); min-height: 38px; margin: 0 12px 10px; padding: 8px 10px; border: 1px solid var(--borderColor-default, #3d444d); border-radius: 6px; background: var(--bgColor-muted, #151b23); color: inherit; font: inherit; outline-offset: 1px; }
+#bgh-tools-dialog :focus-visible, .bgh-tool-launcher:focus-visible { outline: 2px solid var(--focus-outlineColor, #4493f8); outline-offset: 2px; }
+#bgh-tools-results { overflow-y: auto; overscroll-behavior: contain; min-height: 0; max-height: 380px; padding: 0 6px 6px; }
+#bgh-tools-results [role="option"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 12px; min-height: 40px; margin: 1px 0; padding: 8px 10px; border-radius: 5px; color: inherit; text-decoration: none; cursor: pointer; overflow-wrap: anywhere; }
+#bgh-tools-results [role="option"][aria-selected="true"], #bgh-tools-close:hover { background: var(--bgColor-neutral-muted, #656c7633); }
+#bgh-tools-results small { color: var(--fgColor-muted, #9198a1); font-size: 12px; }
+#bgh-tools-empty { margin: 12px 16px 24px; color: var(--fgColor-muted, #9198a1); }
+#bgh-tools-repository-settings { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 8px 16px; border-top: 1px solid var(--borderColor-muted, #3d444d); font-size: 12px; }
+#bgh-tools-repository-settings label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: normal; }
+#bgh-tools-repository-settings button { padding: 4px 8px; border: 1px solid var(--borderColor-default, #3d444d); border-radius: 5px; background: var(--bgColor-muted, #151b23); }
+#bgh-tools-dialog footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 8px 16px; border-top: 1px solid var(--borderColor-muted, #3d444d); font-size: 11px; color: var(--fgColor-muted, #9198a1); }
+#bgh-tools-dialog [hidden] { display: none !important; }
+#bgh-tools-toast { position: fixed; z-index: 2147483646; bottom: 16px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); padding: 10px 14px; border: 1px solid var(--borderColor-default, #3d444d); border-radius: 8px; background: var(--bgColor-emphasis, #3d444d); color: var(--fgColor-onEmphasis, #fff); font: 13px/1.4 var(--bgh-ui-font, sans-serif); box-shadow: 0 4px 18px #0003; }
+.bgh-tools-copy { position: fixed; width: 1px; height: 1px; opacity: 0; }
+@media (max-width: 480px) { #bgh-tools-dialog { margin-top: 12px; max-height: calc(100dvh - 24px); } #bgh-tools-results { max-height: min(380px, 50dvh); } }
